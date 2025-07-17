@@ -3,6 +3,7 @@ package com.datacent.agent.controller;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONArray;
 import com.datacent.agent.service.ChatStreamService;
+import com.datacent.agent.service.McpToolResultService;
 import com.datacent.agent.util.SSEResponseParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ public class ResponseAnalysisController {
 
     @Autowired
     private ChatStreamService chatStreamService;
+    
+    @Autowired
+    private McpToolResultService mcpToolResultService;
 
     /**
      * 流式聊天并实时解析content
@@ -268,6 +272,15 @@ public class ResponseAnalysisController {
             response.put("tool_calls_count", toolCallNames.size());
             response.put("timestamp", System.currentTimeMillis());
             
+            // 保存到数据库
+            try {
+                mcpToolResultService.saveAnalysisResults(response);
+                log.info("✅ 数据已保存到数据库");
+            } catch (Exception e) {
+                log.error("❌ 保存数据到数据库失败", e);
+                response.put("database_save_error", "保存到数据库失败: " + e.getMessage());
+            }
+            
             log.info("提取完成，共找到{}个包含tool_call_id的数据块，{}个工具调用", 
                     validResults, toolCallNames.size());
             
@@ -402,6 +415,106 @@ public class ResponseAnalysisController {
         request.put("mcp_settings", mcpSettings);
         
         return request;
+    }
+    
+    /**
+     * 查询数据库统计信息
+     */
+    @GetMapping("/database/statistics")
+    public JSONObject getDatabaseStatistics() {
+        try {
+            JSONObject stats = mcpToolResultService.getStatistics();
+            return stats;
+        } catch (Exception e) {
+            log.error("查询数据库统计信息失败", e);
+            return createErrorResponse("查询数据库统计信息失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 根据线程ID查询MCP工具调用结果
+     */
+    @GetMapping("/database/results/{threadId}")
+    public JSONObject getResultsByThreadId(@PathVariable String threadId) {
+        try {
+            var results = mcpToolResultService.getResultsByThreadId(threadId);
+            
+            JSONObject response = new JSONObject();
+            response.put("success", true);
+            response.put("thread_id", threadId);
+            response.put("results", results);
+            response.put("count", results.size());
+            response.put("timestamp", System.currentTimeMillis());
+            
+            return response;
+        } catch (Exception e) {
+            log.error("查询线程{}的结果失败", threadId, e);
+            return createErrorResponse("查询结果失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 根据工具名称查询工具调用
+     */
+    @GetMapping("/database/tools/{toolName}")
+    public JSONObject getToolCallsByName(@PathVariable String toolName) {
+        try {
+            var toolCalls = mcpToolResultService.getToolCallsByName(toolName);
+            
+            JSONObject response = new JSONObject();
+            response.put("success", true);
+            response.put("tool_name", toolName);
+            response.put("tool_calls", toolCalls);
+            response.put("count", toolCalls.size());
+            response.put("timestamp", System.currentTimeMillis());
+            
+            return response;
+        } catch (Exception e) {
+            log.error("查询工具{}的调用失败", toolName, e);
+            return createErrorResponse("查询工具调用失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取所有工具名称
+     */
+    @GetMapping("/database/tools")
+    public JSONObject getAllToolNames() {
+        try {
+            var toolNames = mcpToolResultService.getAllToolNames();
+            
+            JSONObject response = new JSONObject();
+            response.put("success", true);
+            response.put("tool_names", toolNames);
+            response.put("count", toolNames.size());
+            response.put("timestamp", System.currentTimeMillis());
+            
+            return response;
+        } catch (Exception e) {
+            log.error("查询所有工具名称失败", e);
+            return createErrorResponse("查询工具名称失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取最近的分析会话
+     */
+    @GetMapping("/database/sessions")
+    public JSONObject getRecentSessions() {
+        try {
+            var sessions = mcpToolResultService.getRecentSessions();
+            
+            JSONObject response = new JSONObject();
+            response.put("success", true);
+            response.put("sessions", sessions);
+            response.put("count", sessions.size());
+            response.put("timestamp", System.currentTimeMillis());
+            
+            return response;
+        } catch (Exception e) {
+            log.error("查询最近会话失败", e);
+            return createErrorResponse("查询会话失败: " + e.getMessage());
+        }
     }
     
     /**
