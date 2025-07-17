@@ -4,22 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6dfaba8d-3e4d-4ac3-93d2-dd115d85f347" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/mcp-tool-analysis.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/mcp-tool-analysis.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ResponseAnalysisController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ResponseAnalysisController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/util/SSEResponseParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/util/SSEResponseParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ResponseAnalysisController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ResponseAnalysisController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/util/SSEResponseParser$SSEInfo.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/util/SSEResponseParser$SSEInfo.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/util/SSEResponseParser.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/util/SSEResponseParser.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
-  </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Class" />
-      </list>
-    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -27,89 +26,54 @@
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
-        <option name="customMavenHome" value="$PROJECT_DIR$/../maven" />
+        <option name="customMavenHome" value="$PROJECT_DIR$/../apache-maven-3.9.6" />
         <option name="localRepository" value="$PROJECT_DIR$/../repository" />
         <option name="mavenHomeTypeForPersistence" value="CUSTOM" />
-        <option name="userSettingsFile" value="$PROJECT_DIR$/../maven/conf/settings.xml" />
+        <option name="userSettingsFile" value="$PROJECT_DIR$/../apache-maven-3.9.6/conf/settings.xml" />
       </MavenGeneralSettings>
     </option>
-  </component>
-  <component name="MavenRunner">
-    <option name="skipTests" value="true" />
   </component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="2" />
   </component>
   <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 2
 }</component>
-  <component name="ProjectId" id="2yLwtebuHp2uuFXzUdIBUZEDRvt" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectId" id="2zzs23KqzWgimf5Mvljnh7rdnFC" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
-    &quot;Application.ResponseContentExtractor.executor&quot;: &quot;Run&quot;,
-    &quot;Maven. [org.apache.maven.plugins:maven-archetype-plugin:RELEASE:generate].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.graph-agent [clean,compile,package].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.graph-agent [package].executor&quot;: &quot;Run&quot;,
     &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
     &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
     &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
     &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;Spring Boot.AgentApplication.executor&quot;: &quot;Run&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/admin/workspace/graph-agent&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.48965517&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="ReactorSettings">
-    <option name="notificationShown" value="true" />
-  </component>
-  <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/doc" />
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/src/main/java/com/datacent/agent/service" />
-      <recent name="$PROJECT_DIR$/src/main/resources" />
-      <recent name="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller" />
-    </key>
-  </component>
-  <component name="RunManager" selected="Spring Boot.AgentApplication">
-    <configuration name="ResponseContentExtractor" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.datacent.agent.util.ResponseContentExtractor" />
-      <module name="graph-agent" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="AgentApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
+  <component name="RunManager">
+    <configuration name="AgentApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="graph-agent" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.datacent.agent.AgentApplication" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Spring Boot.AgentApplication" />
-        <item itemvalue="Application.ResponseContentExtractor" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -121,45 +85,18 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="6dfaba8d-3e4d-4ac3-93d2-dd115d85f347" name="Changes" comment="" />
-      <created>1749627378246</created>
+      <changelist id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="" />
+      <created>1752745026419</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1749627378246</updated>
-      <workItem from="1749627379187" duration="1365000" />
-      <workItem from="1750043655139" duration="6225000" />
-      <workItem from="1750125536588" duration="3193000" />
-      <workItem from="1750161755718" duration="3558000" />
-      <workItem from="1750314592190" duration="2067000" />
-      <workItem from="1750387277701" duration="1248000" />
-      <workItem from="1750406008933" duration="1636000" />
-      <workItem from="1750499390747" duration="89000" />
-      <workItem from="1750499830605" duration="880000" />
-      <workItem from="1752548520418" duration="4136000" />
-      <workItem from="1752553344494" duration="1899000" />
-      <workItem from="1752560389475" duration="1576000" />
-      <workItem from="1752564329635" duration="1068000" />
-      <workItem from="1752574988797" duration="45825000" />
-      <workItem from="1752736052386" duration="6437000" />
-      <workItem from="1752744117392" duration="698000" />
-      <workItem from="1752744840761" duration="63000" />
-      <workItem from="1752744906016" duration="7000" />
-      <workItem from="1752744929428" duration="19000" />
+      <updated>1752745026419</updated>
+      <workItem from="1752745028003" duration="5559000" />
+      <workItem from="1752754716301" duration="10000" />
+      <workItem from="1752754736055" duration="365000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ResponseAnalysisController.java</url>
-          <line>339</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

@@ -86,6 +86,82 @@ public class SSEResponseParser {
     }
     
     /**
+     * 从SSE响应数据中提取所有enabled_tools信息
+     * 
+     * @param sseResponse SSE格式的响应数据
+     * @return 所有enabled_tools的列表
+     */
+    public static List<String> extractEnabledTools(String sseResponse) {
+        List<String> enabledTools = new ArrayList<>();
+        
+        if (sseResponse == null || sseResponse.trim().isEmpty()) {
+            return enabledTools;
+        }
+        
+        try {
+            String[] lines = sseResponse.split("\n");
+            
+            for (String line : lines) {
+                line = line.trim();
+                
+                // 处理SSE格式的数据行 (以"data:"开头)
+                if (line.startsWith("data:")) {
+                    String jsonStr = line.substring(5).trim(); // 去掉"data:"前缀
+                    
+                    // 跳过空的JSON数据
+                    if (jsonStr.isEmpty()) {
+                        continue;
+                    }
+                    
+                    try {
+                        JSONObject jsonObject = JSON.parseObject(jsonStr);
+                        
+                        // 提取tool_calls数组中的enabled_tools
+                        if (jsonObject.containsKey("tool_calls")) {
+                            Object toolCallsObj = jsonObject.get("tool_calls");
+                            if (toolCallsObj instanceof com.alibaba.fastjson2.JSONArray) {
+                                com.alibaba.fastjson2.JSONArray toolCalls = (com.alibaba.fastjson2.JSONArray) toolCallsObj;
+                                for (int i = 0; i < toolCalls.size(); i++) {
+                                    Object toolCallObj = toolCalls.get(i);
+                                    if (toolCallObj instanceof JSONObject) {
+                                        JSONObject toolCall = (JSONObject) toolCallObj;
+                                        String toolName = toolCall.getString("name");
+                                        if (toolName != null && !toolName.trim().isEmpty() && !enabledTools.contains(toolName)) {
+                                            enabledTools.add(toolName);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 也检查直接的enabled_tools字段
+                        if (jsonObject.containsKey("enabled_tools")) {
+                            Object enabledToolsObj = jsonObject.get("enabled_tools");
+                            if (enabledToolsObj instanceof com.alibaba.fastjson2.JSONArray) {
+                                com.alibaba.fastjson2.JSONArray toolsArray = (com.alibaba.fastjson2.JSONArray) enabledToolsObj;
+                                for (int i = 0; i < toolsArray.size(); i++) {
+                                    String toolName = toolsArray.getString(i);
+                                    if (toolName != null && !toolName.trim().isEmpty() && !enabledTools.contains(toolName)) {
+                                        enabledTools.add(toolName);
+                                    }
+                                }
+                            }
+                        }
+                        
+                    } catch (Exception e) {
+                        log.debug("解析JSON数据失败，跳过该行: {}", jsonStr);
+                    }
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("解析SSE响应数据中的enabled_tools失败", e);
+        }
+        
+        return enabledTools;
+    }
+    
+    /**
      * 解析SSE响应数据，提取基本信息（thread_id, agent, role等）
      * 
      * @param sseResponse SSE格式的响应数据

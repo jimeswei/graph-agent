@@ -250,6 +250,7 @@ public class ResponseAnalysisController {
                                 }
                             }
                         }
+                        
                     }
                 } catch (Exception e) {
                     // 跳过无效数据块
@@ -259,14 +260,16 @@ public class ResponseAnalysisController {
             // 构建响应 - 包含tool_call_id的数据块和工具调用信息
             JSONObject response = new JSONObject();
             response.put("success", true);
-            response.put("message", String.format("提取到%d个包含tool_call_id的数据块，%d个工具调用", validResults, toolCallNames.size()));
+            response.put("message", String.format("提取到%d个包含tool_call_id的数据块，%d个工具调用", 
+                    validResults, toolCallNames.size()));
             response.put("mcp_tool_results", mcpToolResults);
             response.put("tool_call_names", toolCallNames);
             response.put("results_count", validResults);
             response.put("tool_calls_count", toolCallNames.size());
             response.put("timestamp", System.currentTimeMillis());
             
-            log.info("提取完成，共找到{}个包含tool_call_id的数据块，{}个工具调用", validResults, toolCallNames.size());
+            log.info("提取完成，共找到{}个包含tool_call_id的数据块，{}个工具调用", 
+                    validResults, toolCallNames.size());
             
             return response;
             
