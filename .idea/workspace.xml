@@ -7,14 +7,20 @@
     <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/mcp-tool-analysis.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/mcp-tool-analysis.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plantext" beforeDir="false" afterPath="$PROJECT_DIR$/plantext" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ChatStreamController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ChatStreamController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ResponseAnalysisController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ResponseAnalysisController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/entity/McpToolResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/entity/McpToolResult.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/entity/ToolCallName.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/entity/ToolCallName.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ChatStreamController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ChatStreamController.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ResponseAnalysisController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ResponseAnalysisController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/service/ChatStreamService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/service/ChatStreamService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/util/ResponseContentExtractor.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/util/ResponseContentExtractor.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/McpToolResult$McpToolResultBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/McpToolResult$McpToolResultBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/McpToolResult.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/McpToolResult.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/ToolCallName$ToolCallNameBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/ToolCallName$ToolCallNameBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/ToolCallName.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/ToolCallName.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/service/McpToolResultService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/service/McpToolResultService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +40,9 @@
       </MavenGeneralSettings>
     </option>
   </component>
+  <component name="MavenRunner">
+    <option name="skipTests" value="true" />
+  </component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="2" />
   </component>
@@ -46,27 +55,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;Spring Boot.AgentApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/admin/workspace/graph-agent&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Maven.graph-agent [clean,compile,package].executor": "Run",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.AgentApplication.executor": "Run",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/admin/workspace/graph-agent",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "MavenSettings",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration name="AgentApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="graph-agent" />
@@ -93,7 +103,7 @@
       <updated>1752745026419</updated>
       <workItem from="1752745028003" duration="5559000" />
       <workItem from="1752754716301" duration="10000" />
-      <workItem from="1752754736055" duration="3654000" />
+      <workItem from="1752754736055" duration="11180000" />
     </task>
     <servers />
   </component>

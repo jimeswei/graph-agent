@@ -41,7 +41,7 @@ public class ChatStreamController {
      * @param request 简化的请求体
      * @return 流式响应数据
      */
-    @PostMapping(value = "/stream/simple", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/stream/proxy", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chatStreamSimple(@RequestBody JSONObject request) {
         String message = request.getString("message");
         String threadId = request.getString("thread_id");
