@@ -5,20 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/query.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/mcp-tool-analysis.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/mcp-tool-analysis.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ChatStreamController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ChatStreamController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ResponseAnalysisController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ResponseAnalysisController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/entity/McpToolResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/entity/McpToolResult.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/entity/ToolCallName.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/entity/ToolCallName.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ResponseAnalysisController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/repository/McpToolResultRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/repository/McpToolResultRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ChatStreamController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ChatStreamController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ResponseAnalysisController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ResponseAnalysisController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/McpToolResult$McpToolResultBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/McpToolResult$McpToolResultBuilder.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/McpToolResult.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/McpToolResult.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/ToolCallName$ToolCallNameBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/ToolCallName$ToolCallNameBuilder.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/ToolCallName.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/ToolCallName.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ResponseAnalysisController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/repository/McpToolResultRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/repository/McpToolResultRepository.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/service/McpToolResultService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/datacent/agent/service/McpToolResultService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/graph-agent-1.0-SNAPSHOT.jar" beforeDir="false" afterPath="$PROJECT_DIR$/target/graph-agent-1.0-SNAPSHOT.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/graph-agent-1.0-SNAPSHOT.jar.original" beforeDir="false" afterPath="$PROJECT_DIR$/target/graph-agent-1.0-SNAPSHOT.jar.original" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
     </list>
@@ -77,6 +76,9 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="ReactorSettings">
+    <option name="notificationShown" value="true" />
+  </component>
   <component name="RunManager">
     <configuration name="AgentApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="graph-agent" />
@@ -103,11 +105,26 @@
       <updated>1752745026419</updated>
       <workItem from="1752745028003" duration="5559000" />
       <workItem from="1752754716301" duration="10000" />
-      <workItem from="1752754736055" duration="11180000" />
+      <workItem from="1752754736055" duration="22897000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/src/main/java/com/datacent/agent/repository/McpToolResultRepository.java</url>
+          <line>67</line>
+          <properties class="com.datacent.agent.repository.McpToolResultRepository" method="findAllToolResultsByThreadId">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

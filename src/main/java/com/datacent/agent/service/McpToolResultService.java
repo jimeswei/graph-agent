@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,220 +35,159 @@ public class McpToolResultService {
     @Autowired
     private ChatStreamService chatStreamService;
     
+    @Autowired 
+    private ChatRequestBuilderService chatRequestBuilderService;
+    
     /**
-     * 提取MCP工具调用结果
-     * 分析JSON数据，只提取agent调用MCP工具返回的那部分值
+     * 获取流式数据并返回 - 纯流式版本
+     * 从消息构建请求并获取流式响应数据
      */
-    public JSONObject extractMcpToolResults(String message) {
+    public Flux<String> extractMcpToolResultsStream(String message) {
+        return extractMcpToolResultsStream(message, null);
+    }
+    
+    /**
+     * 获取流式数据并返回 - 纯流式版本（支持自定义thread_id）
+     * 从消息构建请求并获取流式响应数据
+     */
+    public Flux<String> extractMcpToolResultsStream(String message, String threadId) {
         if (message == null || message.trim().isEmpty()) {
-            return createErrorResponse("消息内容不能为空");
+            return Flux.just("data: " + chatRequestBuilderService.createErrorResponse("消息内容不能为空").toJSONString() + "\n\n");
         }
         
         try {
             // 构建完整请求
-            JSONObject fullRequest = buildFullRequest(message);
+            JSONObject fullRequest = chatRequestBuilderService.buildFullRequest(message, threadId);
             
-            log.info("开始聊天并提取MCP工具调用结果，消息: {}", message);
+            log.info("开始流式聊天，消息: {}", message);
             
-            // 使用同步方式获取数据
-            List<String> chunks = chatStreamService.chatStream(fullRequest)
+            // 获取流式数据
+            Flux<String> streamData = chatStreamService.chatStream(fullRequest)
                     .timeout(java.time.Duration.ofMinutes(3))
-                    .collectList()
-                    .block();
+                    .doOnError(error -> log.error("获取流式数据失败", error))
+                    .onErrorResume(throwable -> {
+                        log.error("⚠️ 流式数据获取异常恢复: {}", throwable.getMessage());
+                        return Flux.just("data: " + chatRequestBuilderService.createErrorResponse("流式数据获取失败: " + throwable.getMessage()).toJSONString() + "\n\n");
+                    })
+                    .cache(); // 缓存流数据供后续处理使用
             
-            if (chunks == null || chunks.isEmpty()) {
-                return createErrorResponse("未收到流式响应数据");
-            }
+            // 在后台异步处理数据提取和保存
+            extractMcpToolResults(streamData);
             
-            // 提取包含tool_call_id的数据块和工具调用信息
-            JSONArray mcpToolResults = new JSONArray();
-            JSONArray toolCallNames = new JSONArray();
-            int validResults = 0;
-            
-            for (String chunk : chunks) {
-                // 处理数据块 - 支持两种格式：SSE格式("data:"开头)和纯JSON格式
-                String jsonStr;
-                if (chunk.startsWith("data:")) {
-                    jsonStr = chunk.substring(5).trim();
-                } else {
-                    jsonStr = chunk.trim();
-                }
-                
-                try {
-                    if (!jsonStr.isEmpty()) {
-                        JSONObject jsonData = com.alibaba.fastjson2.JSON.parseObject(jsonStr);
-                        
-                        // 检查是否包含tool_call_id
-                        String toolCallId = jsonData.getString("tool_call_id");
-                        if (toolCallId != null && !toolCallId.trim().isEmpty()) {
-                            validResults++;
-                            
-                            // 输出包含tool_call_id的完整JSON数据块
-                            mcpToolResults.add(jsonData);
-                            
-                            log.info("✅ 找到tool_call_id数据块 [{}]: {}", validResults, jsonData.toJSONString());
-                        }
-                        
-                        // 检查是否包含tool_calls数组（工具调用定义）
-                        JSONArray toolCalls = jsonData.getJSONArray("tool_calls");
-                        if (toolCalls != null && !toolCalls.isEmpty()) {
-                            for (int i = 0; i < toolCalls.size(); i++) {
-                                JSONObject toolCall = toolCalls.getJSONObject(i);
-                                if (toolCall != null) {
-                                    String name = toolCall.getString("name");
-                                    String id = toolCall.getString("id");
-                                    String type = toolCall.getString("type");
-                                    Object args = toolCall.get("args");
-                                    Integer index = toolCall.getInteger("index");
-                                    
-                                    if (name != null && !name.trim().isEmpty()) {
-                                        JSONObject toolCallInfo = new JSONObject();
-                                        toolCallInfo.put("name", name);
-                                        toolCallInfo.put("id", id);
-                                        toolCallInfo.put("type", type);
-                                        toolCallInfo.put("args", args);
-                                        toolCallInfo.put("index", index);
-                                        
-                                        toolCallNames.add(toolCallInfo);
-                                        
-                                        log.info("✅ 找到工具调用: name={}, id={}, type={}", name, id, type);
-                                    }
-                                }
-                            }
-                        }
-                        
-                    }
-                } catch (Exception e) {
-                    // 跳过无效数据块
-                }
-            }
-            
-            // 构建响应 - 包含tool_call_id的数据块和工具调用信息
-            JSONObject response = new JSONObject();
-            response.put("success", true);
-            response.put("message", String.format("提取到%d个包含tool_call_id的数据块，%d个工具调用", 
-                    validResults, toolCallNames.size()));
-            response.put("mcp_tool_results", mcpToolResults);
-            response.put("tool_call_names", toolCallNames);
-            response.put("results_count", validResults);
-            response.put("tool_calls_count", toolCallNames.size());
-            response.put("timestamp", System.currentTimeMillis());
-            
-            // 保存到数据库
-            try {
-                saveAnalysisResults(response);
-                log.info("✅ 数据已保存到数据库");
-            } catch (Exception e) {
-                log.error("❌ 保存数据到数据库失败", e);
-                response.put("database_save_error", "保存到数据库失败: " + e.getMessage());
-            }
-            
-            log.info("提取完成，共找到{}个包含tool_call_id的数据块，{}个工具调用", 
-                    validResults, toolCallNames.size());
-            
-            return response;
+            return streamData;
             
         } catch (Exception e) {
-            log.error("MCP工具调用结果提取失败", e);
-            return createErrorResponse("MCP工具调用结果提取失败: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            log.error("流式数据获取失败", e);
+            return Flux.just("data: " + chatRequestBuilderService.createErrorResponse("流式数据获取失败: " + e.getClass().getSimpleName() + " - " + e.getMessage()).toJSONString() + "\n\n");
         }
     }
-    
+
     /**
-     * 构建完整的请求体
+     * 提取MCP工具调用结果 - 接收Flux<String>参数
+     * 分析流式JSON数据，提取agent调用MCP工具返回的那部分值并保存到数据库
+     * 异步非阻塞执行，立即返回
      */
-    private JSONObject buildFullRequest(String message) {
-        JSONObject request = new JSONObject();
+    public void extractMcpToolResults(Flux<String> streamData) {
+        log.info("开始从流式数据中提取MCP工具调用结果");
         
-        // 构建messages数组
-        JSONArray messages = new JSONArray();
-        JSONObject messageObj = new JSONObject();
-        messageObj.put("role", "user");
-        messageObj.put("content", message);
-        messages.add(messageObj);
-        request.put("messages", messages);
-        
-        // 设置thread_id（可变参数）
-        request.put("thread_id", "analysis_" + System.currentTimeMillis());
-        
-        // 固定参数（根据文档要求不能变）
-        request.put("resources", new JSONArray());
-        request.put("auto_accepted_plan", true);
-        request.put("enable_deep_thinking", false);
-        request.put("enable_background_investigation", false);
-        request.put("max_plan_iterations", 1);
-        request.put("max_step_num", 5);
-        request.put("max_search_results", 5);
-        request.put("report_style", "academic");
-        
-        // MCP配置信息（根据文档固定格式）
-        JSONObject mcpSettings = new JSONObject();
-        JSONObject servers = new JSONObject();
-        
-        // knowledge-graph-general-query-service
-        JSONObject generalQueryService = new JSONObject();
-        generalQueryService.put("name", "knowledge-graph-general-query-service");
-        generalQueryService.put("transport", "sse");
-        generalQueryService.put("env", null);
-        generalQueryService.put("url", "http://192.168.3.78:5823/sse");
-        JSONArray generalTools = new JSONArray();
-        generalTools.add("query_celebrity_relationships");
-        generalQueryService.put("enabled_tools", generalTools);
-        JSONArray generalAgents = new JSONArray();
-        generalAgents.add("researcher");
-        generalAgents.add("coder");
-        generalQueryService.put("add_to_agents", generalAgents);
-        servers.put("knowledge-graph-general-query-service", generalQueryService);
-        
-        // knowledge-graph-algorithrm-service
-        JSONObject algorithmService = new JSONObject();
-        algorithmService.put("name", "knowledge-graph-algorithrm-service");
-        algorithmService.put("transport", "sse");
-        algorithmService.put("env", null);
-        algorithmService.put("url", "http://192.168.3.78:5821/sse");
-        JSONArray algorithmTools = new JSONArray();
-        algorithmTools.add("most_recent_common_ancestor");
-        algorithmTools.add("relation_chain_between_stars");
-        algorithmTools.add("similarity_between_stars");
-        algorithmTools.add("mutual_friend_between_stars");
-        algorithmTools.add("dream_team_common_works");
-        algorithmService.put("enabled_tools", algorithmTools);
-        JSONArray algorithmAgents = new JSONArray();
-        algorithmAgents.add("researcher");
-        algorithmAgents.add("coder");
-        algorithmService.put("add_to_agents", algorithmAgents);
-        servers.put("knowledge-graph-algorithrm-service", algorithmService);
-        
-        // knowledge-content-detail-service
-        JSONObject contentDetailService = new JSONObject();
-        contentDetailService.put("name", "knowledge-content-detail-service");
-        contentDetailService.put("transport", "sse");
-        contentDetailService.put("env", null);
-        contentDetailService.put("url", "http://192.168.3.78:5822/sse");
-        JSONArray contentTools = new JSONArray();
-        contentTools.add("contextualized_content_detail_stars");
-        contentDetailService.put("enabled_tools", contentTools);
-        JSONArray contentAgents = new JSONArray();
-        contentAgents.add("researcher");
-        contentAgents.add("coder");
-        contentDetailService.put("add_to_agents", contentAgents);
-        servers.put("knowledge-content-detail-service", contentDetailService);
-        
-        mcpSettings.put("servers", servers);
-        request.put("mcp_settings", mcpSettings);
-        
-        return request;
+        streamData
+                .collectList()
+                .subscribeOn(Schedulers.boundedElastic()) // 在弹性线程池中执行，避免阻塞
+                .subscribe(chunks -> {
+                    if (chunks == null || chunks.isEmpty()) {
+                        log.warn("未收到流式响应数据");
+                        return;
+                    }
+                    
+                    // 提取包含tool_call_id的数据块和工具调用信息
+                    JSONArray mcpToolResults = new JSONArray();
+                    JSONArray toolCallNames = new JSONArray();
+                    java.util.concurrent.atomic.AtomicInteger validResults = new java.util.concurrent.atomic.AtomicInteger(0);
+                    
+                    for (String chunk : chunks) {
+                        processChunkForMcpData(chunk, mcpToolResults, toolCallNames, validResults);
+                    }
+                    
+                    // 构建响应
+                    JSONObject response = chatRequestBuilderService.buildAnalysisResult(mcpToolResults, toolCallNames, validResults.get());
+                    
+                    // 保存到数据库
+                    try {
+                        saveAnalysisResults(response);
+                        log.info("✅ 数据已保存到数据库");
+                    } catch (Exception e) {
+                        log.error("❌ 保存数据到数据库失败", e);
+                    }
+                    
+                    log.info("提取完成，共找到{}个包含tool_call_id的数据块，{}个工具调用", 
+                            validResults.get(), toolCallNames.size());
+                    
+                }, error -> log.error("MCP工具调用结果提取失败", error));
     }
     
     /**
-     * 创建错误响应
+     * 处理单个数据块，提取MCP相关数据
      */
-    private JSONObject createErrorResponse(String message) {
-        JSONObject response = new JSONObject();
-        response.put("success", false);
-        response.put("message", message);
-        response.put("timestamp", System.currentTimeMillis());
-        return response;
+    private void processChunkForMcpData(String chunk, JSONArray mcpToolResults, JSONArray toolCallNames, 
+                                       java.util.concurrent.atomic.AtomicInteger validResults) {
+        // 处理数据块 - 支持两种格式：SSE格式("data:"开头)和纯JSON格式
+        String jsonStr;
+        if (chunk.startsWith("data:")) {
+            jsonStr = chunk.substring(5).trim();
+        } else {
+            jsonStr = chunk.trim();
+        }
+        
+        try {
+            if (!jsonStr.isEmpty()) {
+                JSONObject jsonData = com.alibaba.fastjson2.JSON.parseObject(jsonStr);
+                
+                // 检查是否包含tool_call_id
+                String toolCallId = jsonData.getString("tool_call_id");
+                if (toolCallId != null && !toolCallId.trim().isEmpty()) {
+                    int currentCount = validResults.incrementAndGet();
+                    
+                    // 输出包含tool_call_id的完整JSON数据块
+                    synchronized (mcpToolResults) {
+                        mcpToolResults.add(jsonData);
+                    }
+                    
+                    log.info("✅ 找到tool_call_id数据块 [{}]: {}", currentCount, jsonData.toJSONString());
+                }
+                
+                // 检查是否包含tool_calls数组（工具调用定义）
+                JSONArray toolCalls = jsonData.getJSONArray("tool_calls");
+                if (toolCalls != null && !toolCalls.isEmpty()) {
+                    for (int i = 0; i < toolCalls.size(); i++) {
+                        JSONObject toolCall = toolCalls.getJSONObject(i);
+                        if (toolCall != null) {
+                            String name = toolCall.getString("name");
+                            String id = toolCall.getString("id");
+                            String type = toolCall.getString("type");
+                            Object args = toolCall.get("args");
+                            Integer index = toolCall.getInteger("index");
+                            
+                            if (name != null && !name.trim().isEmpty()) {
+                                JSONObject toolCallInfo = new JSONObject();
+                                toolCallInfo.put("name", name);
+                                toolCallInfo.put("id", id);
+                                toolCallInfo.put("type", type);
+                                toolCallInfo.put("args", args);
+                                toolCallInfo.put("index", index);
+                                
+                                synchronized (toolCallNames) {
+                                    toolCallNames.add(toolCallInfo);
+                                }
+                                
+                                log.info("✅ 找到工具调用: name={}, id={}, type={}", name, id, type);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // 跳过无效数据块
+        }
     }
     
     /**
