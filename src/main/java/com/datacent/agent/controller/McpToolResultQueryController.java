@@ -1,8 +1,10 @@
 package com.datacent.agent.controller;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.datacent.agent.dto.McpToolResultQueryDTO;
 import com.datacent.agent.dto.McpToolNameDTO;
+import com.datacent.agent.entity.GraphCache;
 import com.datacent.agent.service.McpToolResultQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -153,5 +155,115 @@ public class McpToolResultQueryController {
         examples.put("queryAll", allExample);
         
         return ResponseEntity.ok(examples);
+    }
+    
+    /**
+     * 根据线程ID查询GraphCache数据
+     * 先获取该threadId的所有工具结果，从content字段提取id，然后用提取的id查询graph-cache表
+     * 
+     * @param threadId 线程ID
+     * @return GraphCache数据列表
+     */
+    @GetMapping("/query/graph-cache")
+    public ResponseEntity<List<GraphCache>> queryGraphCacheByThreadId(@RequestParam String threadId) {
+        
+        log.info("接收到GraphCache查询请求，threadId: {}", threadId);
+        
+        List<GraphCache> results = mcpToolResultQueryService.queryGraphCache(threadId);
+        
+        return ResponseEntity.ok(results);
+    }
+    
+    /**
+     * 调试接口：查看指定threadId的详细处理过程
+     * 
+     * @param threadId 线程ID
+     * @return 调试信息
+     */
+    @GetMapping("/debug/graph-cache")
+    public ResponseEntity<JSONObject> debugGraphCacheQuery(@RequestParam String threadId) {
+        
+        log.info("接收到GraphCache调试查询请求，threadId: {}", threadId);
+        
+        JSONObject debugInfo = new JSONObject();
+        debugInfo.put("threadId", threadId);
+        debugInfo.put("timestamp", System.currentTimeMillis());
+        
+        // 1. 检查是否有工具结果
+        List<McpToolResultQueryDTO> toolResults = mcpToolResultQueryService.getAllToolResultsByThreadId(threadId);
+        debugInfo.put("toolResultsCount", toolResults.size());
+        
+        if (!toolResults.isEmpty()) {
+            JSONArray toolResultsDebug = new JSONArray();
+            for (McpToolResultQueryDTO result : toolResults) {
+                JSONObject toolResultDebug = new JSONObject();
+                toolResultDebug.put("name", result.getName());
+                toolResultDebug.put("contentLength", result.getContent() != null ? result.getContent().length() : 0);
+                toolResultDebug.put("contentPreview", result.getContent() != null && result.getContent().length() > 200 
+                    ? result.getContent().substring(0, 200) + "..." 
+                    : result.getContent());
+                toolResultsDebug.add(toolResultDebug);
+            }
+            debugInfo.put("toolResults", toolResultsDebug);
+        }
+        
+        // 2. 测试id提取
+        JSONObject extractionInfo = mcpToolResultQueryService.debugIdExtraction(threadId);
+        debugInfo.put("idExtraction", extractionInfo);
+        
+        return ResponseEntity.ok(debugInfo);
+    }
+    
+    /**
+     * 查看graph_cache表中的实际数据样本
+     * 
+     * @param limit 限制返回条数，默认10条
+     * @return graph_cache表中的数据样本
+     */
+    @GetMapping("/debug/graph-cache-sample")
+    public ResponseEntity<JSONObject> getGraphCacheSample(@RequestParam(defaultValue = "10") int limit) {
+        
+        log.info("查看graph_cache表数据样本，limit: {}", limit);
+        
+        JSONObject response = new JSONObject();
+        response.put("timestamp", System.currentTimeMillis());
+        
+        try {
+            JSONObject sampleInfo = mcpToolResultQueryService.getGraphCacheSample(limit);
+            response.put("success", true);
+            response.put("data", sampleInfo);
+        } catch (Exception e) {
+            log.error("查询graph_cache样本数据失败", e);
+            response.put("success", false);
+            response.put("error", e.getMessage());
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * 诊断数据库连接和表访问问题
+     * 
+     * @return 诊断信息
+     */
+    @GetMapping("/debug/database-connection")
+    public ResponseEntity<JSONObject> diagnoseDatabaseConnection() {
+        
+        log.info("开始诊断数据库连接");
+        
+        JSONObject response = new JSONObject();
+        response.put("timestamp", System.currentTimeMillis());
+        
+        try {
+            JSONObject diagnostic = mcpToolResultQueryService.diagnoseDatabaseConnection();
+            response.put("success", true);
+            response.put("diagnostic", diagnostic);
+        } catch (Exception e) {
+            log.error("数据库连接诊断失败", e);
+            response.put("success", false);
+            response.put("error", e.getMessage());
+        }
+        
+        return ResponseEntity.ok(response);
     }
 }
