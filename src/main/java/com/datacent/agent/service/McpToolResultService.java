@@ -193,7 +193,7 @@ public class McpToolResultService {
     /**
      * 保存MCP工具调用结果和工具调用名称到数据库
      */
-    @Transactional
+    //@Transactional
     public void saveAnalysisResults(JSONObject analysisResult) {
         try {
             // 生成会话ID
