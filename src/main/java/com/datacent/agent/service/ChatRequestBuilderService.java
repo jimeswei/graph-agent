@@ -5,6 +5,8 @@ import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 /**
  * 聊天请求构建服务
  * 负责构建各种类型的聊天请求体
@@ -19,7 +21,11 @@ public class ChatRequestBuilderService {
     public JSONObject buildFullRequest(String message) {
         return buildFullRequest(message, null);
     }
-    
+
+
+    public String generateThreadId() {
+        return "thread_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8);
+    }
     /**
      * 构建完整的请求体（支持自定义thread_id）
      */
@@ -38,7 +44,7 @@ public class ChatRequestBuilderService {
         if (threadId != null && !threadId.trim().isEmpty()) {
             request.put("thread_id", threadId);
         } else {
-            request.put("thread_id", "analysis_" + System.currentTimeMillis());
+            request.put("thread_id", generateThreadId());
         }
         
         // 固定参数（根据文档要求不能变）
@@ -88,22 +94,7 @@ public class ChatRequestBuilderService {
         algorithmAgents.add("coder");
         algorithmService.put("add_to_agents", algorithmAgents);
         servers.put("knowledge-graph-algorithrm-service", algorithmService);
-        
-        // knowledge-content-detail-service
-        JSONObject contentDetailService = new JSONObject();
-        contentDetailService.put("name", "knowledge-content-detail-service");
-        contentDetailService.put("transport", "sse");
-        contentDetailService.put("env", null);
-        contentDetailService.put("url", "http://192.168.3.78:5822/sse");
-        JSONArray contentTools = new JSONArray();
-        contentTools.add("contextualized_content_detail_stars");
-        contentDetailService.put("enabled_tools", contentTools);
-        JSONArray contentAgents = new JSONArray();
-        contentAgents.add("researcher");
-        contentAgents.add("coder");
-        contentDetailService.put("add_to_agents", contentAgents);
-        servers.put("knowledge-content-detail-service", contentDetailService);
-        
+
         mcpSettings.put("servers", servers);
         request.put("mcp_settings", mcpSettings);
         

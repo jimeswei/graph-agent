@@ -55,3 +55,6 @@ CREATE TABLE `analysis_sessions` (
     INDEX `idx_session_id` (`session_id`),
     INDEX `idx_timestamp` (`timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='分析会话表';
+
+
+

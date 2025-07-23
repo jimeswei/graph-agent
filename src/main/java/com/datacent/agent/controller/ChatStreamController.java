@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
+import java.util.UUID;
+
 /**
  * 聊天流式代理控制器
  * 直接转发请求到外部图谱agent接口，实现流式返回
@@ -22,6 +24,11 @@ public class ChatStreamController {
     @Autowired
     private McpToolResultService mcpToolResultService;
 
+
+    /**
+     * 生成唯一的thread_id
+     */
+
     /**
      * 提取MCP工具调用结果的专门接口 - 流式版本
      * 分析JSON数据，只提取agent调用MCP工具返回的那部分值，使用流式响应
@@ -33,7 +40,6 @@ public class ChatStreamController {
     public Flux<String> extractMcpToolResultsStream(@RequestBody JSONObject request) {
         String message = request.getString("message");
         String threadId = request.getString("thread_id");
-
         log.info("开始流式提取MCP工具调用结果，消息: {}, 线程ID: {}", message, threadId);
 
         return mcpToolResultService.extractMcpToolResultsStream(message, threadId);

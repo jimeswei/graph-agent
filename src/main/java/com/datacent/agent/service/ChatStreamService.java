@@ -82,10 +82,5 @@ public class ChatStreamService {
                 });
     }
     
-    /**
-     * 生成唯一的thread_id
-     */
-    public String generateThreadId() {
-        return "thread_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8);
-    }
+
 }

@@ -1,6 +1,7 @@
 com/datacent/agent/service/ChatStreamService.class
 com/datacent/agent/dto/McpToolNameDTO$McpToolNameDTOBuilder.class
 com/datacent/agent/repository/ToolCallNameRepository.class
+com/datacent/agent/entity/GraphCache.class
 com/datacent/agent/entity/McpToolResult.class
 com/datacent/agent/dto/McpToolResultQueryDTO$McpToolResultQueryDTOBuilder.class
 com/datacent/agent/util/SSEResponseParser$SSEInfo.class
@@ -19,5 +20,7 @@ com/datacent/agent/entity/AnalysisSession.class
 com/datacent/agent/dto/McpToolNameDTO.class
 com/datacent/agent/controller/ChatStreamController.class
 com/datacent/agent/service/ChatRequestBuilderService.class
+com/datacent/agent/repository/GraphCacheRepository.class
 com/datacent/agent/service/McpToolResultService.class
+com/datacent/agent/entity/GraphCache$GraphCacheBuilder.class
 com/datacent/agent/controller/McpToolResultQueryController.class
