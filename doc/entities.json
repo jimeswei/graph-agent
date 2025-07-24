@@ -1,0 +1,9 @@
+{
+  "target_persons": ["name1", "name2"],
+  "extracted_entities": [
+    {
+      "name": "name",
+      "type": "celebrity/event/work"
+    }
+  ]
+}
