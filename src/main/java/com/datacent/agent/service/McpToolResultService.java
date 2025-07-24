@@ -12,12 +12,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -51,10 +48,15 @@ public class McpToolResultService {
      * 从消息构建请求并获取流式响应数据
      */
     public Flux<String> extractMcpToolResultsStream(String message, String threadId) {
+
         if (message == null || message.trim().isEmpty()) {
             return Flux.just("data: " + chatRequestBuilderService.createErrorResponse("消息内容不能为空").toJSONString() + "\n\n");
         }
-        
+
+        if (null == threadId){
+            threadId = "thread-" + UUID.randomUUID().toString();
+        }
+
         try {
             // 构建完整请求
             JSONObject fullRequest = chatRequestBuilderService.buildFullRequest(message, threadId);
@@ -72,7 +74,7 @@ public class McpToolResultService {
                     .cache(); // 缓存流数据供后续处理使用
             
             // 在后台异步处理数据提取和保存
-            extractMcpToolResults(streamData);
+            extractMcpToolResults(streamData, threadId);
             
             return streamData;
             
@@ -83,53 +85,100 @@ public class McpToolResultService {
     }
 
     /**
-     * 提取MCP工具调用结果 - 接收Flux<String>参数
-     * 分析流式JSON数据，提取agent调用MCP工具返回的那部分值并保存到数据库
-     * 异步非阻塞执行，立即返回
+     * 提取MCP工具调用结果 - 接收Flux<String>参数和threadId
+     * 分析流式JSON数据，提取agent调用MCP工具返回的那部分值并实时保存到数据库
+     * 异步非阻塞执行，立即返回，每解析到一条数据立即入库
+     * 使用传入的threadId作为sessionId
      */
-    public void extractMcpToolResults(Flux<String> streamData) {
-        log.info("开始从流式数据中提取MCP工具调用结果");
+    public void extractMcpToolResults(Flux<String> streamData, String threadId) {
+        log.info("开始从流式数据中提取MCP工具调用结果，threadId: {}", threadId);
+
+        // 创建或获取会话记录
+        createOrGetAnalysisSession(threadId);
+        
+        // 计数器，用于统计
+        java.util.concurrent.atomic.AtomicInteger validResults = new java.util.concurrent.atomic.AtomicInteger(0);
+        java.util.concurrent.atomic.AtomicInteger toolCallsCount = new java.util.concurrent.atomic.AtomicInteger(0);
+
         
         streamData
-                .collectList()
-                .subscribeOn(Schedulers.boundedElastic()) // 在弹性线程池中执行，避免阻塞
-                .subscribe(chunks -> {
-                    if (chunks == null || chunks.isEmpty()) {
-                        log.warn("未收到流式响应数据");
-                        return;
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe(
+                    chunk -> {
+                        // 实时处理每个数据块
+                        processChunkForMcpDataRealtime(chunk, threadId, validResults, toolCallsCount);
+                    },
+                    error -> {
+                        log.error("MCP工具调用结果提取失败", error);
+                        // 更新会话状态为失败
+                        updateAnalysisSessionStatus(threadId, false, "流数据处理失败: " + error.getMessage(),
+                                                   validResults.get(), toolCallsCount.get());
+                    },
+                    () -> {
+                        // 流处理完成
+                        log.info("提取完成，会话ID: {}, 共找到{}个包含tool_call_id的数据块，{}个工具调用",
+                                threadId, validResults.get(), toolCallsCount.get());
+                        // 更新会话状态为成功
+                        updateAnalysisSessionStatus(threadId, true, "处理成功",
+                                                   validResults.get(), toolCallsCount.get());
                     }
-                    
-                    // 提取包含tool_call_id的数据块和工具调用信息
-                    JSONArray mcpToolResults = new JSONArray();
-                    JSONArray toolCallNames = new JSONArray();
-                    java.util.concurrent.atomic.AtomicInteger validResults = new java.util.concurrent.atomic.AtomicInteger(0);
-                    
-                    for (String chunk : chunks) {
-                        processChunkForMcpData(chunk, mcpToolResults, toolCallNames, validResults);
-                    }
-                    
-                    // 构建响应
-                    JSONObject response = chatRequestBuilderService.buildAnalysisResult(mcpToolResults, toolCallNames, validResults.get());
-                    
-                    // 保存到数据库
-                    try {
-                        saveAnalysisResults(response);
-                        log.info("✅ 数据已保存到数据库");
-                    } catch (Exception e) {
-                        log.error("❌ 保存数据到数据库失败", e);
-                    }
-                    
-                    log.info("提取完成，共找到{}个包含tool_call_id的数据块，{}个工具调用", 
-                            validResults.get(), toolCallNames.size());
-                    
-                }, error -> log.error("MCP工具调用结果提取失败", error));
+                );
     }
     
     /**
-     * 处理单个数据块，提取MCP相关数据
+     * 创建或获取分析会话记录（使用threadId作为sessionId）
      */
-    private void processChunkForMcpData(String chunk, JSONArray mcpToolResults, JSONArray toolCallNames, 
-                                       java.util.concurrent.atomic.AtomicInteger validResults) {
+    private void createOrGetAnalysisSession(String threadId) {
+        try {
+            // 先检查是否已存在该threadId的会话
+            if (analysisSessionRepository.findBySessionId(threadId).isEmpty()) {
+                // 不存在则创建新会话
+                AnalysisSession session = AnalysisSession.builder()
+                        .sessionId(threadId)
+                        .success(false)
+                        .message("处理中...")
+                        .resultsCount(0)
+                        .toolCallsCount(0)
+                        .timestamp(System.currentTimeMillis())
+                        .build();
+                
+                analysisSessionRepository.save(session);
+                log.info("创建新分析会话记录，threadId: {}", threadId);
+            } else {
+                log.debug("会话已存在，threadId: {}", threadId);
+            }
+        } catch (Exception e) {
+            log.error("创建分析会话记录失败，threadId: {}", threadId, e);
+        }
+    }
+    
+    /**
+     * 更新分析会话状态
+     */
+    private void updateAnalysisSessionStatus(String threadId, boolean success, String message,
+                                           int resultsCount, int toolCallsCount) {
+        try {
+            analysisSessionRepository.findBySessionId(threadId).ifPresent(session -> {
+                session.setSuccess(success);
+                session.setMessage(message);
+                session.setResultsCount(resultsCount);
+                session.setToolCallsCount(toolCallsCount);
+                analysisSessionRepository.save(session);
+                log.info("更新会话状态 [{}]: success={}, results={}, toolCalls={}",
+                        threadId, success, resultsCount, toolCallsCount);
+            });
+        } catch (Exception e) {
+            log.error("更新分析会话状态失败: {}", threadId, e);
+        }
+    }
+    
+    /**
+     * 实时处理单个数据块，提取MCP相关数据并立即保存
+     * 使用传入的threadId直接保存数据
+     */
+    private void processChunkForMcpDataRealtime(String chunk, String threadId,
+                                              java.util.concurrent.atomic.AtomicInteger validResults,
+                                              java.util.concurrent.atomic.AtomicInteger toolCallsCount) {
         // 处理数据块 - 支持两种格式：SSE格式("data:"开头)和纯JSON格式
         String jsonStr;
         if (chunk.startsWith("data:")) {
@@ -147,12 +196,10 @@ public class McpToolResultService {
                 if (toolCallId != null && !toolCallId.trim().isEmpty()) {
                     int currentCount = validResults.incrementAndGet();
                     
-                    // 输出包含tool_call_id的完整JSON数据块
-                    synchronized (mcpToolResults) {
-                        mcpToolResults.add(jsonData);
-                    }
+                    // 立即保存MCP工具调用结果
+                    saveMcpToolResultRealtime(jsonData, threadId, toolCallId);
                     
-                    log.info("✅ 找到tool_call_id数据块 [{}]: {}", currentCount, jsonData.toJSONString());
+                    log.info("✅ 找到并保存tool_call_id数据块 [{}]: tool_call_id={}", currentCount, toolCallId);
                 }
                 
                 // 检查是否包含tool_calls数组（工具调用定义）
@@ -168,117 +215,64 @@ public class McpToolResultService {
                             Integer index = toolCall.getInteger("index");
                             
                             if (name != null && !name.trim().isEmpty()) {
-                                JSONObject toolCallInfo = new JSONObject();
-                                toolCallInfo.put("name", name);
-                                toolCallInfo.put("id", id);
-                                toolCallInfo.put("type", type);
-                                toolCallInfo.put("args", args);
-                                toolCallInfo.put("index", index);
+                                toolCallsCount.incrementAndGet();
                                 
-                                synchronized (toolCallNames) {
-                                    toolCallNames.add(toolCallInfo);
-                                }
+                                // 立即保存工具调用名称
+                                saveToolCallNameRealtime(threadId, name, id, type, args, index);
                                 
-                                log.info("✅ 找到工具调用: name={}, id={}, type={}", name, id, type);
+                                log.info("✅ 找到并保存工具调用: name={}, id={}, type={}", name, id, type);
                             }
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            // 跳过无效数据块
+            // 跳过无效数据块，但记录错误
+            log.debug("跳过无效数据块: {}", e.getMessage());
         }
     }
     
     /**
-     * 保存MCP工具调用结果和工具调用名称到数据库
+     * 实时保存MCP工具调用结果
      */
-    //@Transactional
-    public void saveAnalysisResults(JSONObject analysisResult) {
+    private void saveMcpToolResultRealtime(JSONObject result, String sessionId, String toolCallId) {
         try {
-            // 生成会话ID
-            String sessionId = "session_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8);
-            
-            // 提取基本信息
-            Boolean success = analysisResult.getBoolean("success");
-            String message = analysisResult.getString("message");
-            Integer resultsCount = analysisResult.getInteger("results_count");
-            Integer toolCallsCount = analysisResult.getInteger("tool_calls_count");
-            Long timestamp = analysisResult.getLong("timestamp");
-            
-            // 保存会话信息
-            AnalysisSession session = AnalysisSession.builder()
+            McpToolResult toolResult = McpToolResult.builder()
+                    .threadId(result.getString("thread_id"))
+                    .agent(result.getString("agent"))
+                    .resultId(result.getString("id"))
+                    .role(result.getString("role"))
+                    .content(result.getString("content"))
+                    .toolCallId(toolCallId)
                     .sessionId(sessionId)
-                    .success(success != null ? success : false)
-                    .message(message)
-                    .resultsCount(resultsCount != null ? resultsCount : 0)
-                    .toolCallsCount(toolCallsCount != null ? toolCallsCount : 0)
-                    .timestamp(timestamp)
                     .build();
             
-            analysisSessionRepository.save(session);
-            log.info("保存分析会话: {}", sessionId);
-            
-            // 保存MCP工具调用结果
-            JSONArray mcpToolResults = analysisResult.getJSONArray("mcp_tool_results");
-            if (mcpToolResults != null && !mcpToolResults.isEmpty()) {
-                List<McpToolResult> toolResults = new ArrayList<>();
-                
-                for (int i = 0; i < mcpToolResults.size(); i++) {
-                    JSONObject result = mcpToolResults.getJSONObject(i);
-                    if (result != null) {
-                        McpToolResult toolResult = McpToolResult.builder()
-                                .threadId(result.getString("thread_id"))
-                                .agent(result.getString("agent"))
-                                .resultId(result.getString("id"))
-                                .role(result.getString("role"))
-                                .content(result.getString("content"))
-                                .toolCallId(result.getString("tool_call_id"))
-                                .sessionId(sessionId)
-                                .build();
-                        
-                        toolResults.add(toolResult);
-                    }
-                }
-                
-                if (!toolResults.isEmpty()) {
-                    mcpToolResultRepository.saveAll(toolResults);
-                    log.info("保存{}条MCP工具调用结果", toolResults.size());
-                }
-            }
-            
-            // 保存工具调用名称
-            JSONArray toolCallNames = analysisResult.getJSONArray("tool_call_names");
-            if (toolCallNames != null && !toolCallNames.isEmpty()) {
-                List<ToolCallName> callNames = new ArrayList<>();
-                
-                for (int i = 0; i < toolCallNames.size(); i++) {
-                    JSONObject toolCall = toolCallNames.getJSONObject(i);
-                    if (toolCall != null) {
-                        ToolCallName callName = ToolCallName.builder()
-                                .name(toolCall.getString("name"))
-                                .callId(toolCall.getString("id"))
-                                .type(toolCall.getString("type"))
-                                .args(toolCall.get("args") != null ? toolCall.get("args").toString() : null)
-                                .callIndex(toolCall.getInteger("index"))
-                                .sessionId(sessionId)
-                                .build();
-                        
-                        callNames.add(callName);
-                    }
-                }
-                
-                if (!callNames.isEmpty()) {
-                    toolCallNameRepository.saveAll(callNames);
-                    log.info("保存{}条工具调用名称", callNames.size());
-                }
-            }
-            
-            log.info("分析结果保存完成，会话ID: {}", sessionId);
-            
+            mcpToolResultRepository.save(toolResult);
+            log.debug("保存MCP工具调用结果: tool_call_id={}", toolCallId);
         } catch (Exception e) {
-            log.error("保存分析结果失败", e);
-            throw new RuntimeException("保存分析结果失败: " + e.getMessage(), e);
+            log.error("保存MCP工具调用结果失败: tool_call_id={}", toolCallId, e);
+        }
+    }
+    
+    /**
+     * 实时保存工具调用名称
+     */
+    private void saveToolCallNameRealtime(String sessionId, String name, 
+                                        String id, String type, Object args, Integer index) {
+        try {
+            ToolCallName callName = ToolCallName.builder()
+                    .name(name)
+                    .callId(id)
+                    .type(type)
+                    .args(args != null ? args.toString() : null)
+                    .callIndex(index)
+                    .sessionId(sessionId)
+                    .build();
+            
+            toolCallNameRepository.save(callName);
+            log.debug("保存工具调用名称: name={}, id={}", name, id);
+        } catch (Exception e) {
+            log.error("保存工具调用名称失败: name={}, id={}", name, id, e);
         }
     }
     
