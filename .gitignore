@@ -1,215 +1,51 @@
-# ==============================================
-# 通用 .gitignore 模板
-# ==============================================
+# ===================================
+# Java项目 + IntelliJ IDEA 忽略配置
+# ===================================
 
-# ==================== 系统文件 ====================
-# macOS 系统文件
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# ============= IDEA 配置文件 =============
+# 用户特定的工作空间配置
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/shelf/
 
-# Windows 系统文件
-Desktop.ini
-$RECYCLE.BIN/
+# 敏感配置和本地设置
+.idea/dataSources/
+.idea/dataSources.ids
+.idea/dataSources.local.xml
+.idea/sqlDataSources.xml
+.idea/dynamic.xml
+.idea/uiDesigner.xml
 
-# Linux 系统文件
-*~
-.directory
+# Gradle相关
+.idea/gradle.xml
+.idea/jarRepositories.xml
 
-# ==================== 编辑器和IDE ====================
-# Visual Studio Code
-.vscode/
-*.code-workspace
+# Maven相关
+.idea/compiler.xml
+.idea/libraries/
 
-# JetBrains IDEs (IntelliJ IDEA, WebStorm, PyCharm等)
-.idea/
+# 模块文件
 *.iml
 *.ipr
 *.iws
 
-# Sublime Text
-*.sublime-workspace
-*.sublime-project
-
-# Vim
-*.swp
-*.swo
-*~
-
-# Emacs
-*~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-
-# ==================== Node.js ====================
-# 依赖目录
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-
-# 运行时数据
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# 覆盖率目录
-lib-cov
-coverage/
-*.lcov
-.nyc_output
-
-# Grunt intermediate storage
-.grunt
-
-# Bower dependency directory
-bower_components
-
-# node-waf configuration
-.lock-wscript
-
-# Compiled binary addons
-build/Release
-
-# Dependency directories
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# ==================== Python ====================
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff
-*.log
-local_settings.py
-db.sqlite3
-
-# Flask stuff
-instance/
-.webassets-cache
-
-# Scrapy stuff
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
+# ============= Java 编译文件 =============
+# 编译输出目录
+out/
 target/
+build/
+bin/
+classes/
 
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-
-# ==================== Java ====================
-# Compiled class file
+# Java字节码文件
 *.class
 
-# Log file
+# 日志文件
 *.log
 
-# BlueJ files
+# BlueJ文件
 *.ctxt
 
 # Mobile Tools for Java (J2ME)
@@ -224,11 +60,10 @@ venv.bak/
 *.tar.gz
 *.rar
 
-# virtual machine crash logs
+# 虚拟机崩溃日志
 hs_err_pid*
 
-# Maven
-target/
+# ============= Maven 项目 =============
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -239,150 +74,62 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-# Gradle
-.gradle
-build/
+# ============= Gradle 项目 =============
+.gradle/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-# ==================== C/C++ ====================
-# Prerequisites
-*.d
+# Gradle缓存
+/local.properties
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# ============= Spring Boot =============
+# Spring Boot 应用属性
+application-local.properties
+application-dev.properties
+application-*.yml
+application-*.yaml
+/logs/
 
-# Precompiled Headers
-*.gch
-*.pch
+# ============= 测试相关 =============
+# JUnit
+.junit/
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+# 测试覆盖率
+*.exec
+.jacoco/
+coverage/
+.coverage/
 
-# Fortran module files
-*.mod
-*.smod
+# Surefire测试报告
+surefire-reports/
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+# ============= 数据库文件 =============
+# H2数据库
+*.db
+*.h2.db
+*.trace.db
 
-# Executables
-*.exe
-*.out
-*.app
-
-# ==================== 前端框架 ====================
-# React
-/build
-/public/hot
-/public/storage
-/storage/*.key
-/vendor
-
-# Vue.js
-/dist/
-npm-debug.log
-yarn-error.log
-
-# Angular
-/dist/
-/tmp/
-/out-tsc/
-/bazel-out
-
-# ==================== 数据库 ====================
 # SQLite
 *.sqlite
 *.sqlite3
-*.db
 
-# MySQL
-*.sql
+# Derby数据库
+derby.log
+/metastore_db/
 
-# ==================== 日志和临时文件 ====================
-# 日志文件
-*.log
-logs/
-log/
+# ============= 开发工具配置 =============
+# Eclipse
+.project
+.classpath
+.settings/
 
-# 临时文件
-tmp/
-temp/
-*.tmp
-*.temp
-
-# 备份文件
-*.bak
-*.backup
-*.old
-
-# ==================== 配置文件 ====================
-# 环境配置
-.env
-.env.local
-.env.*.local
-config.local.js
-config.local.json
-
-# 密钥文件
-*.key
-*.pem
-*.p12
-*.crt
-*.cer
-
-# ==================== 构建和部署 ====================
-# 构建输出
-build/
+# NetBeans
+nbproject/private/
+nbbuild/
 dist/
-out/
+nbdist/
+.nb-gradle/
 
-# Docker
-.dockerignore
-
-# Terraform
-*.tfstate
-*.tfstate.*
-.terraform/
-
-# ==================== 版本控制 ====================
-# Git
-.git/
-*.orig
-
-# SVN
-.svn/
-
-# ==================== 其他 ====================
-# 压缩文件
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
-
-# 缓存
-.cache/
-*.cache
-
-# 本地配置
-local.properties
-.local
-
-# ==================== 自定义规则 ====================
-# 在这里添加项目特定的忽略规则
-# 例如：
-# my-secret-file.txt
-# /specific-folder/
+# VS Code
+.vscode/
