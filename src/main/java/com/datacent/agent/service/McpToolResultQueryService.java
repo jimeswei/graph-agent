@@ -31,6 +31,8 @@ public class McpToolResultQueryService {
     private final McpToolResultRepository mcpToolResultRepository;
     
     private final GraphCacheRepository graphCacheRepository;
+
+
     
     /**
      * 根据线程ID和工具名称查询工具执行结果
@@ -115,7 +117,7 @@ public class McpToolResultQueryService {
     }
     
     /**
-     * 根据threadId获取所有工具结果，从content字段提取id，然后查询graph-cache表
+     * 根据threadId获取所有工具结果，从content字段提取id，然后查询graph_cache表
      * 
      * @param threadId 线程ID
      * @return GraphCache列表
@@ -144,7 +146,7 @@ public class McpToolResultQueryService {
         
         log.info("从content字段提取到{}个唯一id", extractedIds.size());
         
-        // 3. 使用提取到的id作为threadId查询graph-cache表
+        // 3. 使用提取到的id作为threadId查询graph_cache表
         List<GraphCache> graphCaches = new ArrayList<>();
         for (String id : extractedIds) {
             List<GraphCache> caches = graphCacheRepository.findByThreadId(id);

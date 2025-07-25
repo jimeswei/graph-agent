@@ -1,6 +1,7 @@
 package com.datacent.agent.controller;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.datacent.agent.service.AgentProcessService;
 import com.datacent.agent.service.ChatStreamService;
 import com.datacent.agent.service.McpToolResultService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +23,8 @@ import java.util.UUID;
 public class ChatStreamController {
 
     @Autowired
-    private McpToolResultService mcpToolResultService;
+   private AgentProcessService agentProcessService;
+    // private McpToolResultService mcpToolResultService;
 
 
     /**
@@ -42,7 +44,7 @@ public class ChatStreamController {
         String threadId = request.getString("thread_id");
         log.info("开始流式提取MCP工具调用结果，消息: {}, 线程ID: {}", message, threadId);
 
-        return mcpToolResultService.extractMcpToolResultsStream(message, threadId);
+        return agentProcessService.process(message, threadId);
     }
 
 

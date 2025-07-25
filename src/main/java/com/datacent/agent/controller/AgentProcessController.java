@@ -22,7 +22,7 @@ import java.util.List;
 @RequestMapping("/api/mcp-tool-results")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
-public class McpToolResultQueryController {
+public class AgentProcessController {
     
     private final McpToolResultQueryService mcpToolResultQueryService;
     
@@ -159,12 +159,12 @@ public class McpToolResultQueryController {
     
     /**
      * 根据线程ID查询GraphCache数据
-     * 先获取该threadId的所有工具结果，从content字段提取id，然后用提取的id查询graph-cache表
+     * 先获取该threadId的所有工具结果，从content字段提取id，然后用提取的id查询graph_cache表
      * 
      * @param threadId 线程ID
      * @return GraphCache数据列表
      */
-    @GetMapping("/query/graph-cache")
+    @GetMapping("/query/graph_cache")
     public ResponseEntity<List<GraphCache>> queryGraphCacheByThreadId(@RequestParam String threadId) {
         
         log.info("接收到GraphCache查询请求，threadId: {}", threadId);
@@ -180,7 +180,7 @@ public class McpToolResultQueryController {
      * @param threadId 线程ID
      * @return 调试信息
      */
-    @GetMapping("/debug/graph-cache")
+    @GetMapping("/debug/graph_cache")
     public ResponseEntity<JSONObject> debugGraphCacheQuery(@RequestParam String threadId) {
         
         log.info("接收到GraphCache调试查询请求，threadId: {}", threadId);
@@ -220,7 +220,7 @@ public class McpToolResultQueryController {
      * @param limit 限制返回条数，默认10条
      * @return graph_cache表中的数据样本
      */
-    @GetMapping("/debug/graph-cache-sample")
+    @GetMapping("/debug/graph_cache-sample")
     public ResponseEntity<JSONObject> getGraphCacheSample(@RequestParam(defaultValue = "10") int limit) {
         
         log.info("查看graph_cache表数据样本，limit: {}", limit);

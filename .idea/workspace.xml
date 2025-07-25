@@ -4,11 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="删除多余文件">
+    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="增加问题提取功能">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/ChatStreamService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/ChatStreamService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/create_tables.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/doc/接口设计.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/接口设计.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ChatStreamController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ChatStreamController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/McpToolResultQueryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/AgentProcessController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultQueryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultQueryService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -109,7 +112,9 @@
       <workItem from="1753267882379" duration="15237000" />
       <workItem from="1753346059923" duration="390000" />
       <workItem from="1753346598521" duration="10830000" />
-      <workItem from="1753408283943" duration="3971000" />
+      <workItem from="1753408283943" duration="7062000" />
+      <workItem from="1753415670928" duration="758000" />
+      <workItem from="1753424937215" duration="1244000" />
     </task>
     <task id="LOCAL-00001" summary="优化参数">
       <option name="closed" value="true" />
@@ -159,7 +164,15 @@
       <option name="project" value="LOCAL" />
       <updated>1753360737974</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="增加问题提取功能">
+      <option name="closed" value="true" />
+      <created>1753412579496</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1753412579496</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -171,7 +184,8 @@
     <MESSAGE value="流式数据" />
     <MESSAGE value="忽略文件模版" />
     <MESSAGE value="删除多余文件" />
-    <option name="LAST_COMMIT_MESSAGE" value="删除多余文件" />
+    <MESSAGE value="增加问题提取功能" />
+    <option name="LAST_COMMIT_MESSAGE" value="增加问题提取功能" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

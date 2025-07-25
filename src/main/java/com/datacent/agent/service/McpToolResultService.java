@@ -32,9 +32,6 @@ public class McpToolResultService {
     @Autowired
     private ChatStreamService chatStreamService;
 
-
-    @Autowired
-    private ExtractEntityService extractEntityService;
     
     @Autowired 
     private ChatRequestBuilderService chatRequestBuilderService;
@@ -55,10 +52,6 @@ public class McpToolResultService {
 
         if (message == null || message.trim().isEmpty()) {
             return Flux.just("data: " + chatRequestBuilderService.createErrorResponse("消息内容不能为空").toJSONString() + "\n\n");
-        }
-
-        if (null == threadId){
-            threadId = "thread-" + UUID.randomUUID();
         }
 
         try {
