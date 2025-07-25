@@ -8,6 +8,7 @@ import com.datacent.agent.entity.GraphCache;
 import com.datacent.agent.service.McpToolResultQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,10 +22,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/mcp-tool-results")
 @CrossOrigin(origins = "*")
-@RequiredArgsConstructor
 public class AgentProcessController {
-    
-    private final McpToolResultQueryService mcpToolResultQueryService;
+
+    @Autowired
+    private  McpToolResultQueryService mcpToolResultQueryService;
     
     /**
      * 根据线程ID和工具名称查询工具执行结果
