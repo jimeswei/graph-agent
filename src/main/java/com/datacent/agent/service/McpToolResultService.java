@@ -31,6 +31,10 @@ public class McpToolResultService {
     
     @Autowired
     private ChatStreamService chatStreamService;
+
+
+    @Autowired
+    private ExtractEntityService extractEntityService;
     
     @Autowired 
     private ChatRequestBuilderService chatRequestBuilderService;
@@ -54,7 +58,7 @@ public class McpToolResultService {
         }
 
         if (null == threadId){
-            threadId = "thread-" + UUID.randomUUID().toString();
+            threadId = "thread-" + UUID.randomUUID();
         }
 
         try {

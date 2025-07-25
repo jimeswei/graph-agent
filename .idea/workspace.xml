@@ -4,62 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="忽略文件模版">
-      <change afterPath="$PROJECT_DIR$/doc/entities.json" afterDir="false" />
+    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="删除多余文件">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CLAUDE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CONSOLE-LOGGING.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README_DATABASE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/doc/接口设计.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/接口设计.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/json-output-format.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/mcp-tool-analysis.2025-07-17.0.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/mcp-tool-analysis.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/monitor-logs.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pase_response.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/query.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/reponse.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/result.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/application.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/AgentApplication.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/ChatStreamController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/controller/McpToolResultQueryController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/dto/McpToolNameDTO$McpToolNameDTOBuilder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/dto/McpToolNameDTO.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/dto/McpToolResultQueryDTO$McpToolResultQueryDTOBuilder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/dto/McpToolResultQueryDTO.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/AnalysisSession$AnalysisSessionBuilder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/AnalysisSession.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/McpToolResult$McpToolResultBuilder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/McpToolResult.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/ToolCallName$ToolCallNameBuilder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/entity/ToolCallName.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/repository/AnalysisSessionRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/repository/McpToolResultRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/repository/ToolCallNameRepository.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/service/ChatRequestBuilderService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/service/ChatStreamService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/service/McpToolResultQueryService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/service/McpToolResultService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/util/ResponseContentExtractor.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/util/SSEResponseParser$SSEInfo.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/datacent/agent/util/SSEResponseParser.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/logback-spring.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/graph-agent-1.0-SNAPSHOT.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/graph-agent-1.0-SNAPSHOT.jar.original" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-archiver/pom.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/datacent/agent/controller/ChatStreamControllerTest.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/datacent/agent/util/SSEResponseParserTest.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test-api.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test-console-output.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test-console-stream.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test-fix.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test-improved-extraction.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test-mcp-extraction.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test-stream-mcp.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/ChatStreamService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/ChatStreamService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -159,7 +108,8 @@
       <workItem from="1753257249827" duration="5399000" />
       <workItem from="1753267882379" duration="15237000" />
       <workItem from="1753346059923" duration="390000" />
-      <workItem from="1753346598521" duration="9075000" />
+      <workItem from="1753346598521" duration="10830000" />
+      <workItem from="1753408283943" duration="3971000" />
     </task>
     <task id="LOCAL-00001" summary="优化参数">
       <option name="closed" value="true" />
@@ -201,7 +151,15 @@
       <option name="project" value="LOCAL" />
       <updated>1753340533061</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="删除多余文件">
+      <option name="closed" value="true" />
+      <created>1753360737974</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1753360737974</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -212,7 +170,8 @@
     <MESSAGE value="去掉保存事物" />
     <MESSAGE value="流式数据" />
     <MESSAGE value="忽略文件模版" />
-    <option name="LAST_COMMIT_MESSAGE" value="忽略文件模版" />
+    <MESSAGE value="删除多余文件" />
+    <option name="LAST_COMMIT_MESSAGE" value="删除多余文件" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

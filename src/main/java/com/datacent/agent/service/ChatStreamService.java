@@ -16,6 +16,7 @@ import java.util.UUID;
 public class ChatStreamService {
     
     private final WebClient webClient;
+
     
     @Value("${chat.stream.base-url:http://192.168.3.78:48558}")
     private String baseUrl;
