@@ -42,9 +42,6 @@ public class McpToolResult {
     @Column(name = "tool_call_id", nullable = false, length = 100)
     private String toolCallId;
     
-    @Column(name = "session_id", nullable = false, length = 100)
-    private String sessionId;
-    
     @Column(name = "created_time")
     private LocalDateTime createdTime;
     

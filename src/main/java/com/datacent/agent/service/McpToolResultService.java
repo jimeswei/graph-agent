@@ -36,29 +36,37 @@ public class McpToolResultService {
     @Autowired 
     private ChatRequestBuilderService chatRequestBuilderService;
     
-    /**
-     * 获取流式数据并返回 - 纯流式版本
-     * 从消息构建请求并获取流式响应数据
-     */
-    public Flux<String> extractMcpToolResultsStream(String message) {
-        return extractMcpToolResultsStream(message, null);
-    }
+    // 移除无参数版本，强制要求提供threadId以确保数据一致性
     
     /**
      * 获取流式数据并返回 - 纯流式版本（支持自定义thread_id）
      * 从消息构建请求并获取流式响应数据
+     * @param message 消息内容
+     * @param threadId 线程ID（必须提供，不能为空）
      */
     public Flux<String> extractMcpToolResultsStream(String message, String threadId) {
 
         if (message == null || message.trim().isEmpty()) {
             return Flux.just("data: " + chatRequestBuilderService.createErrorResponse("消息内容不能为空").toJSONString() + "\n\n");
         }
+        
+        // 严格验证threadId，确保数据一致性
+        if (threadId == null || threadId.trim().isEmpty()) {
+            log.error("❌ threadId不能为空！这会导致会话数据不一致");
+            return Flux.just("data: " + chatRequestBuilderService.createErrorResponse("系统错误：缺少会话标识符").toJSONString() + "\n\n");
+        }
 
         try {
-            // 构建完整请求
+            // 构建完整请求（使用提供的threadId，绝不生成新的）
             JSONObject fullRequest = chatRequestBuilderService.buildFullRequest(message, threadId);
             
-            log.info("开始流式聊天，消息: {}", message);
+            // 验证请求中的thread_id与传入的threadId一致
+            String requestThreadId = fullRequest.getString("thread_id");
+            if (!threadId.equals(requestThreadId)) {
+                log.error("🚨 严重错误：请求中的thread_id({})与传入的threadId({})不一致！", requestThreadId, threadId);
+            }
+            
+            log.info("🚀 开始流式聊天，threadId: {}, 消息长度: {}", threadId, message.length());
             
             // 获取流式数据
             Flux<String> streamData = chatStreamService.chatStream(fullRequest)
@@ -85,7 +93,7 @@ public class McpToolResultService {
      * 提取MCP工具调用结果 - 接收Flux<String>参数和threadId
      * 分析流式JSON数据，提取agent调用MCP工具返回的那部分值并实时保存到数据库
      * 异步非阻塞执行，立即返回，每解析到一条数据立即入库
-     * 使用传入的threadId作为sessionId
+     * 使用threadId关联到analysis_sessions表进行会话跟踪
      */
     public void extractMcpToolResults(Flux<String> streamData, String threadId) {
         log.info("开始从流式数据中提取MCP工具调用结果，threadId: {}", threadId);
@@ -123,7 +131,7 @@ public class McpToolResultService {
     }
     
     /**
-     * 创建或获取分析会话记录（使用threadId作为sessionId）
+     * 创建或获取分析会话记录（使用threadId作为session_id）
      */
     private void createOrGetAnalysisSession(String threadId) {
         try {
@@ -193,7 +201,13 @@ public class McpToolResultService {
                 if (toolCallId != null && !toolCallId.trim().isEmpty()) {
                     int currentCount = validResults.incrementAndGet();
                     
-                    // 立即保存MCP工具调用结果
+                    // 记录外部响应的thread_id用于调试（但不用于保存数据）
+                    String externalThreadId = jsonData.getString("thread_id");
+                    if (externalThreadId != null && !externalThreadId.equals(threadId)) {
+                        log.debug("🔍 外部服务返回不同的thread_id: 本地={}, 外部={}", threadId, externalThreadId);
+                    }
+                    
+                    // 立即保存MCP工具调用结果（使用会话级threadId保持一致性）
                     saveMcpToolResultRealtime(jsonData, threadId, toolCallId);
                     
                     log.info("✅ 找到并保存tool_call_id数据块 [{}]: tool_call_id={}", currentCount, toolCallId);
@@ -201,6 +215,8 @@ public class McpToolResultService {
                 
                 // 检查是否包含tool_calls数组（工具调用定义）
                 JSONArray toolCalls = jsonData.getJSONArray("tool_calls");
+                JSONArray toolCallChunks = jsonData.getJSONArray("tool_call_chunks");
+                
                 if (toolCalls != null && !toolCalls.isEmpty()) {
                     for (int i = 0; i < toolCalls.size(); i++) {
                         JSONObject toolCall = toolCalls.getJSONObject(i);
@@ -209,15 +225,17 @@ public class McpToolResultService {
                             String id = toolCall.getString("id");
                             String type = toolCall.getString("type");
                             Object args = toolCall.get("args");
-                            Integer index = toolCall.getInteger("index");
+                            
+                            // 尝试从tool_call_chunks中获取对应的index
+                            Integer index = findIndexFromChunks(id, toolCallChunks);
                             
                             if (name != null && !name.trim().isEmpty()) {
                                 toolCallsCount.incrementAndGet();
                                 
                                 // 立即保存工具调用名称
-                                saveToolCallNameRealtime(threadId, name, id, type, args, index);
+                                saveToolCallNameRealtime(name, id, type, args, index);
                                 
-                                log.info("✅ 找到并保存工具调用: name={}, id={}, type={}", name, id, type);
+                                log.info("✅ 找到并保存工具调用: name={}, id={}, type={}, index={}", name, id, type, index);
                             }
                         }
                     }
@@ -231,46 +249,80 @@ public class McpToolResultService {
     
     /**
      * 实时保存MCP工具调用结果
+     * @param result JSON响应数据
+     * @param sessionThreadId 会话级别的threadId（来自本地生成，用于保持一致性）
+     * @param toolCallId 工具调用ID
      */
-    private void saveMcpToolResultRealtime(JSONObject result, String sessionId, String toolCallId) {
+    private void saveMcpToolResultRealtime(JSONObject result, String sessionThreadId, String toolCallId) {
         try {
+            // 使用会话级别的threadId，而不是响应中的thread_id，确保数据一致性
             McpToolResult toolResult = McpToolResult.builder()
-                    .threadId(result.getString("thread_id"))
+                    .threadId(sessionThreadId)  // 使用统一的会话threadId
                     .agent(result.getString("agent"))
                     .resultId(result.getString("id"))
                     .role(result.getString("role"))
                     .content(result.getString("content"))
                     .toolCallId(toolCallId)
-                    .sessionId(sessionId)
                     .build();
             
             mcpToolResultRepository.save(toolResult);
-            log.debug("保存MCP工具调用结果: tool_call_id={}", toolCallId);
+            log.debug("✅ 保存MCP工具调用结果: thread_id={}, tool_call_id={}", sessionThreadId, toolCallId);
         } catch (Exception e) {
-            log.error("保存MCP工具调用结果失败: tool_call_id={}", toolCallId, e);
+            log.error("❌ 保存MCP工具调用结果失败: thread_id={}, tool_call_id={}", sessionThreadId, toolCallId, e);
         }
     }
     
     /**
      * 实时保存工具调用名称
      */
-    private void saveToolCallNameRealtime(String sessionId, String name, 
-                                        String id, String type, Object args, Integer index) {
+    private void saveToolCallNameRealtime(String name, String id, String type, Object args, Integer index) {
         try {
+            String argsStr = args != null ? args.toString() : null;
+            
             ToolCallName callName = ToolCallName.builder()
                     .name(name)
                     .callId(id)
                     .type(type)
-                    .args(args != null ? args.toString() : null)
+                    .args(argsStr)
                     .callIndex(index)
-                    .sessionId(sessionId)
                     .build();
             
             toolCallNameRepository.save(callName);
-            log.debug("保存工具调用名称: name={}, id={}", name, id);
+            log.debug("✅ 保存工具调用名称成功: name={}, id={}, args={}, index={}", 
+                     name, id, argsStr, index);
         } catch (Exception e) {
-            log.error("保存工具调用名称失败: name={}, id={}", name, id, e);
+            log.error("❌ 保存工具调用名称失败: name={}, id={}, args={}, index={}", 
+                     name, id, args != null ? args.toString() : null, index, e);
         }
+    }
+    
+    /**
+     * 从tool_call_chunks中查找对应call_id的index值
+     * @param callId 工具调用ID
+     * @param toolCallChunks tool_call_chunks数组
+     * @return 找到的index值，如果未找到则返回null
+     */
+    private Integer findIndexFromChunks(String callId, JSONArray toolCallChunks) {
+        if (callId == null || toolCallChunks == null || toolCallChunks.isEmpty()) {
+            return null;
+        }
+        
+        try {
+            for (int i = 0; i < toolCallChunks.size(); i++) {
+                JSONObject chunk = toolCallChunks.getJSONObject(i);
+                if (chunk != null && callId.equals(chunk.getString("id"))) {
+                    Integer index = chunk.getInteger("index");
+                    if (index != null) {
+                        log.debug("找到call_id={}对应的index={}", callId, index);
+                        return index;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("从tool_call_chunks中查找index失败: callId={}", callId, e);
+        }
+        
+        return null;
     }
     
 }

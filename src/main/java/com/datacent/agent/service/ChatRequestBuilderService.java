@@ -23,8 +23,12 @@ public class ChatRequestBuilderService {
     }
 
 
+    /**
+     * 生成统一格式的threadId
+     * 使用与AgentProcessService一致的格式确保系统一致性
+     */
     public String generateThreadId() {
-        return "thread_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8);
+        return "thread-" + UUID.randomUUID();
     }
     /**
      * 构建完整的请求体（支持自定义thread_id）
@@ -40,11 +44,15 @@ public class ChatRequestBuilderService {
         messages.add(messageObj);
         request.put("messages", messages);
         
-        // 设置thread_id（可变参数）
+        // 设置thread_id（严格使用提供的threadId，确保数据一致性）
         if (threadId != null && !threadId.trim().isEmpty()) {
             request.put("thread_id", threadId);
+            log.debug("✅ 使用提供的threadId: {}", threadId);
         } else {
-            request.put("thread_id", generateThreadId());
+            // 只有在明确没有提供threadId时才生成新的
+            String newThreadId = generateThreadId();
+            request.put("thread_id", newThreadId);
+            log.warn("⚠️ 未提供threadId，生成新的: {}", newThreadId);
         }
         
         // 固定参数（根据文档要求不能变）

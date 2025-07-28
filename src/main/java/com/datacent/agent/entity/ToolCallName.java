@@ -39,9 +39,6 @@ public class ToolCallName {
     @Column(name = "call_index")
     private Integer callIndex;
     
-    @Column(name = "session_id", nullable = false, length = 100)
-    private String sessionId;
-    
     @Column(name = "created_time")
     private LocalDateTime createdTime;
     
