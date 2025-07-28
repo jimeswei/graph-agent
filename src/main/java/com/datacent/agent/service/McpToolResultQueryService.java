@@ -242,12 +242,13 @@ public class McpToolResultQueryService {
     }
     
     /**
-     * 调试ID提取过程
+     * 调试工具结果到图缓存的完整映射过程
+     * 分析工具结果内容、ID提取、以及graph_cache表关联情况
      * 
      * @param threadId 线程ID
-     * @return 调试信息
+     * @return 包含内容分析、ID提取、缓存映射的综合调试信息
      */
-    public JSONObject debugIdExtraction(String threadId) {
+    public JSONObject debugToolResultToGraphCacheMapping(String threadId) {
         JSONObject debugInfo = new JSONObject();
         
         // 获取工具结果

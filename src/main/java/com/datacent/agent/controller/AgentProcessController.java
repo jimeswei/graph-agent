@@ -208,8 +208,8 @@ public class AgentProcessController {
             debugInfo.put("toolResults", toolResultsDebug);
         }
         
-        // 2. 测试id提取
-        JSONObject extractionInfo = mcpToolResultQueryService.debugIdExtraction(threadId);
+        // 2. 测试id提取和图缓存映射
+        JSONObject extractionInfo = mcpToolResultQueryService.debugToolResultToGraphCacheMapping(threadId);
         debugInfo.put("idExtraction", extractionInfo);
         
         return ResponseEntity.ok(debugInfo);
