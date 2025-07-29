@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,6 +33,8 @@ public class McpToolResultQueryService {
     private final McpToolResultRepository mcpToolResultRepository;
     
     private final GraphCacheRepository graphCacheRepository;
+    
+    private final GraphQueryService graphQueryService;
 
 
     
@@ -184,7 +187,9 @@ public class McpToolResultQueryService {
             // 提取args字段
             JSONObject args = extractArgsFromJson(contentJson);
             if (args != null) {
-                data.put("args", args);
+                // 根据args查询图数据库
+                JSONArray vertices = queryVerticesFromArgs(args);
+                data.put("vertices", vertices);
             }
             
             // 构建最终的返回结构
@@ -271,6 +276,183 @@ public class McpToolResultQueryService {
         }
         
         return new JSONObject();
+    }
+    
+    /**
+     * 根据args参数查询图数据库顶点信息
+     * 
+     * @param args 包含查询参数的JSON对象
+     * @return 图数据库查询结果的顶点数组
+     */
+    private JSONArray queryVerticesFromArgs(JSONObject args) {
+        if (args == null || args.isEmpty()) {
+            log.debug("args为空，返回空的顶点数组");
+            return new JSONArray();
+        }
+        
+        // 增加详细调试日志
+        log.info("开始处理args: {}", args.toJSONString());
+        
+        try {
+            // 提取人名列表，支持多种可能的字段名
+            List<String> entityNames = extractEntityNamesFromArgs(args);
+            
+            if (entityNames.isEmpty()) {
+                log.warn("从args中未提取到实体名称，args内容: {}, 返回空的顶点数组", args.toJSONString());
+                return new JSONArray();
+            }
+            
+            log.info("从args中提取到{}个实体名称: {}", entityNames.size(), entityNames);
+            
+            // 调用图查询服务
+            JSONArray vertices = graphQueryService.queryCelebrityVertices(entityNames);
+
+            log.info("图查询服务返回{}个顶点", vertices.size());
+            
+            if (vertices.isEmpty()) {
+                log.warn("图查询服务返回空结果，实体名称: {}", entityNames);
+            } else {
+                log.debug("图查询结果: {}", vertices.toJSONString());
+            }
+            
+            return vertices;
+            
+        } catch (Exception e) {
+            log.error("根据args查询图数据库失败，args: {}", args.toJSONString(), e);
+            return new JSONArray();
+        }
+    }
+    
+    /**
+     * 从args JSON对象中提取实体名称列表
+     * 支持多种可能的字段格式：names, entityNames, celebrities等
+     * 
+     * @param args args JSON对象
+     * @return 实体名称列表
+     */
+    private List<String> extractEntityNamesFromArgs(JSONObject args) {
+        List<String> entityNames = new ArrayList<>();
+        
+        log.info("开始从args中提取实体名称，args所有字段: {}", args.keySet());
+        
+        // 支持多种可能的字段名，按优先级排序
+        String[] possibleFieldNames = {
+            "names", "entityNames", "celebrities", "persons", "people", 
+            "actors", "stars", "entities", "targets", "subjects",
+            "name", "celebrity", "person", "actor", "star"
+        };
+        
+        // 首先尝试直接字段匹配
+        for (String fieldName : possibleFieldNames) {
+            if (args.containsKey(fieldName)) {
+                Object value = args.get(fieldName);
+                log.info("找到字段'{}', 值类型: {}, 值: {}", fieldName, value.getClass().getSimpleName(), value);
+                
+                List<String> extracted = extractNamesFromValue(value, fieldName);
+                if (!extracted.isEmpty()) {
+                    entityNames.addAll(extracted);
+                    log.info("从字段'{}'中提取到{}个实体名称: {}", fieldName, extracted.size(), extracted);
+                    return entityNames; // 找到就返回，不再继续查找
+                }
+            }
+        }
+        
+        // 如果直接字段匹配失败，尝试递归查找所有字符串数组
+        log.info("直接字段匹配失败，开始递归查找字符串数组");
+        for (Map.Entry<String, Object> entry : args.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            
+            log.debug("检查字段'{}', 值类型: {}", key, value.getClass().getSimpleName());
+            
+            List<String> extracted = extractNamesFromValue(value, key);
+            if (!extracted.isEmpty()) {
+                entityNames.addAll(extracted);
+                log.info("从通用字段'{}'中提取到{}个实体名称: {}", key, extracted.size(), extracted);
+                break; // 找到第一个有效的就停止
+            }
+        }
+        
+        // 如果还是没找到，尝试递归查找嵌套对象
+        if (entityNames.isEmpty()) {
+            log.info("在顶层未找到，开始递归查找嵌套对象");
+            entityNames.addAll(extractNamesRecursively(args));
+        }
+        
+        log.info("最终提取到{}个实体名称: {}", entityNames.size(), entityNames);
+        return entityNames;
+    }
+    
+    /**
+     * 从单个值中提取实体名称
+     * 
+     * @param value 值对象
+     * @param fieldName 字段名（用于日志）
+     * @return 提取到的实体名称列表
+     */
+    private List<String> extractNamesFromValue(Object value, String fieldName) {
+        List<String> names = new ArrayList<>();
+        
+        if (value == null) {
+            return names;
+        }
+        
+        if (value instanceof JSONArray) {
+            JSONArray array = (JSONArray) value;
+            log.debug("处理数组字段'{}', 数组长度: {}", fieldName, array.size());
+            
+            for (int i = 0; i < array.size(); i++) {
+                Object item = array.get(i);
+                if (item instanceof String) {
+                    String name = item.toString().trim();
+                    if (!name.isEmpty()) {
+                        names.add(name);
+                        log.debug("从数组索引{}提取到实体名称: {}", i, name);
+                    }
+                } else if (item != null) {
+                    log.debug("数组索引{}的值不是字符串，类型: {}, 值: {}", i, item.getClass().getSimpleName(), item);
+                }
+            }
+        } else if (value instanceof String) {
+            String name = value.toString().trim();
+            if (!name.isEmpty()) {
+                names.add(name);
+                log.debug("从字符串字段'{}'提取到实体名称: {}", fieldName, name);
+            }
+        } else {
+            log.debug("字段'{}'的值既不是数组也不是字符串，类型: {}", fieldName, value.getClass().getSimpleName());
+        }
+        
+        return names;
+    }
+    
+    /**
+     * 递归查找嵌套对象中的实体名称
+     * 
+     * @param jsonObject JSON对象
+     * @return 提取到的实体名称列表
+     */
+    private List<String> extractNamesRecursively(JSONObject jsonObject) {
+        List<String> entityNames = new ArrayList<>();
+        
+        for (Map.Entry<String, Object> entry : jsonObject.entrySet()) {
+            Object value = entry.getValue();
+            
+            if (value instanceof JSONObject) {
+                // 递归处理嵌套对象
+                JSONObject nestedObj = (JSONObject) value;
+                entityNames.addAll(extractEntityNamesFromArgs(nestedObj));
+            } else if (value instanceof JSONArray) {
+                JSONArray array = (JSONArray) value;
+                for (Object item : array) {
+                    if (item instanceof JSONObject) {
+                        entityNames.addAll(extractEntityNamesFromArgs((JSONObject) item));
+                    }
+                }
+            }
+        }
+        
+        return entityNames;
     }
     
     /**
