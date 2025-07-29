@@ -159,6 +159,23 @@ public class AgentProcessController {
     }
     
     /**
+     * 根据线程ID查询MCP工具调用结果
+     * 从content字段中提取id、mcp_tool_function和args信息
+     * 
+     * @param threadId 线程ID
+     * @return MCP工具调用结果列表
+     */
+    @GetMapping("/query/mcp_tools")
+    public ResponseEntity<List<JSONObject>> queryMcpToolsByThreadId(@RequestParam String threadId) {
+        
+        log.info("接收到MCP工具查询请求，threadId: {}", threadId);
+        
+        List<JSONObject> results = mcpToolResultQueryService.queryMcpTools(threadId);
+        
+        return ResponseEntity.ok(results);
+    }
+    
+    /**
      * 根据线程ID查询GraphCache数据
      * 先获取该threadId的所有工具结果，从content字段提取id，然后用提取的id查询graph_cache表
      * 

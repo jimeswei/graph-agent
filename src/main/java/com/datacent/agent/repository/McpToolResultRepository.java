@@ -2,6 +2,7 @@ package com.datacent.agent.repository;
 
 import com.datacent.agent.dto.McpToolResultQueryDTO;
 import com.datacent.agent.dto.McpToolNameDTO;
+import com.datacent.agent.dto.McpToolDetailQueryDTO;
 import com.datacent.agent.entity.McpToolResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -76,4 +77,14 @@ public interface McpToolResultRepository extends JpaRepository<McpToolResult, Lo
            "LEFT JOIN ToolCallName tcn ON mtr.toolCallId = tcn.callId " +
            "WHERE mtr.threadId = :threadId AND tcn.name IS NOT NULL")
     List<McpToolNameDTO> findAllToolNamesByThreadId(@Param("threadId") String threadId);
+    
+    /**
+     * 根据线程ID查询工具名称、内容和创建时间
+     * 基于SQL: SELECT t2.NAME, t1.content, t1.created_time FROM mcp_tool_results t1 LEFT JOIN tool_call_names t2 ON t1.tool_call_id = t2.call_id WHERE t1.thread_id = ?
+     */
+    @Query("SELECT new com.datacent.agent.dto.McpToolDetailQueryDTO(tcn.name, mtr.content, mtr.createdTime) " +
+           "FROM McpToolResult mtr " +
+           "LEFT JOIN ToolCallName tcn ON mtr.toolCallId = tcn.callId " +
+           "WHERE mtr.threadId = :threadId")
+    List<McpToolDetailQueryDTO> findMcpToolsByThreadId(@Param("threadId") String threadId);
 }

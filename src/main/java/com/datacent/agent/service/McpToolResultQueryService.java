@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.datacent.agent.dto.McpToolResultQueryDTO;
 import com.datacent.agent.dto.McpToolNameDTO;
+import com.datacent.agent.dto.McpToolDetailQueryDTO;
 import com.datacent.agent.entity.GraphCache;
 import com.datacent.agent.repository.GraphCacheRepository;
 import com.datacent.agent.repository.McpToolResultRepository;
@@ -114,6 +115,162 @@ public class McpToolResultQueryService {
         
         Long count = mcpToolResultRepository.countByThreadId(threadId);
         return count != null && count > 0;
+    }
+    
+    /**
+     * 根据线程ID查询MCP工具结果
+     * 查询工具名称、内容和创建时间，并从content中提取数据结构
+     * 
+     * @param threadId 线程ID
+     * @return 格式化后的工具调用结果列表
+     */
+    public List<JSONObject> queryMcpTools(String threadId) {
+        log.info("查询MCP工具结果，threadId: {}", threadId);
+        
+        if (threadId == null || threadId.trim().isEmpty()) {
+            log.warn("线程ID不能为空");
+            return List.of();
+        }
+        
+        // 1. 从数据库查询原始数据
+        List<McpToolDetailQueryDTO> rawResults = mcpToolResultRepository.findMcpToolsByThreadId(threadId);
+        log.info("从数据库查询到{}条记录", rawResults.size());
+        
+        // 2. 处理每条记录，提取并格式化content中的数据
+        List<JSONObject> formattedResults = new ArrayList<>();
+        for (McpToolDetailQueryDTO result : rawResults) {
+            try {
+                JSONObject extractedData = extractDataFromContent(result.getContent(), result.getName());
+                if (extractedData != null) {
+                    formattedResults.add(extractedData);
+                }
+            } catch (Exception e) {
+                log.warn("处理记录时出错，工具名称: {}, 错误: {}", result.getName(), e.getMessage());
+            }
+        }
+        
+        log.info("成功提取{}条有效记录", formattedResults.size());
+        return formattedResults;
+    }
+    
+    /**
+     * 从content字段中提取数据并格式化为指定的数据结构
+     * 
+     * @param content 原始content内容
+     * @param toolName 工具名称
+     * @return 格式化后的数据对象
+     */
+    private JSONObject extractDataFromContent(String content, String toolName) {
+        if (content == null || content.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            // 尝试解析content为JSON
+            JSONObject contentJson = JSON.parseObject(content);
+            
+            // 构建返回的数据结构
+            JSONObject data = new JSONObject();
+            
+            // 提取id字段
+            String id = extractIdFromJson(contentJson);
+            if (id != null) {
+                data.put("id", id);
+            }
+            
+            // 设置mcp_tool_function为工具名称
+            data.put("mcp_tool_function", toolName);
+            
+            // 提取args字段
+            JSONObject args = extractArgsFromJson(contentJson);
+            if (args != null) {
+                data.put("args", args);
+            }
+            
+            // 构建最终的返回结构
+            JSONObject result = new JSONObject();
+            result.put("data", data);
+            
+            return result;
+            
+        } catch (Exception e) {
+            log.debug("无法解析content为JSON，工具名称: {}, 错误: {}", toolName, e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * 从JSON对象中提取id字段
+     * 
+     * @param json JSON对象
+     * @return 提取到的id，如果未找到则返回null
+     */
+    private String extractIdFromJson(JSONObject json) {
+        // 直接查找id字段
+        if (json.containsKey("id")) {
+            Object idValue = json.get("id");
+            return idValue != null ? idValue.toString() : null;
+        }
+        
+        // 递归查找嵌套对象中的id字段
+        for (Object value : json.values()) {
+            if (value instanceof JSONObject) {
+                String id = extractIdFromJson((JSONObject) value);
+                if (id != null) {
+                    return id;
+                }
+            } else if (value instanceof JSONArray) {
+                JSONArray array = (JSONArray) value;
+                for (Object item : array) {
+                    if (item instanceof JSONObject) {
+                        String id = extractIdFromJson((JSONObject) item);
+                        if (id != null) {
+                            return id;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * 从JSON对象中提取args字段
+     * 
+     * @param json JSON对象
+     * @return 提取到的args对象，如果未找到则返回空对象
+     */
+    private JSONObject extractArgsFromJson(JSONObject json) {
+        // 直接查找args字段
+        if (json.containsKey("args")) {
+            Object argsValue = json.get("args");
+            if (argsValue instanceof JSONObject) {
+                return (JSONObject) argsValue;
+            }
+        }
+        
+        // 递归查找嵌套对象中的args字段
+        for (Object value : json.values()) {
+            if (value instanceof JSONObject) {
+                JSONObject args = extractArgsFromJson((JSONObject) value);
+                if (args != null && !args.isEmpty()) {
+                    return args;
+                }
+            } else if (value instanceof JSONArray) {
+                JSONArray array = (JSONArray) value;
+                for (Object item : array) {
+                    if (item instanceof JSONObject) {
+                        JSONObject args = extractArgsFromJson((JSONObject) item);
+                        if (args != null && !args.isEmpty()) {
+                            return args;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return new JSONObject();
     }
     
     /**
