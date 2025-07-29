@@ -70,20 +70,20 @@ public class ChatRequestBuilderService {
         JSONObject servers = new JSONObject();
         
         // knowledge-graph-general-query-service
-        JSONObject generalQueryService = new JSONObject();
-        generalQueryService.put("name", "knowledge-graph-general-query-service");
-        generalQueryService.put("transport", "sse");
-        generalQueryService.put("env", null);
-        generalQueryService.put("url", "http://192.168.3.78:5823/sse");
-        JSONArray generalTools = new JSONArray();
-        generalTools.add("query_celebrity_relationships");
-        generalQueryService.put("enabled_tools", generalTools);
-        JSONArray generalAgents = new JSONArray();
-        generalAgents.add("researcher");
-        generalAgents.add("coder");
-        generalQueryService.put("add_to_agents", generalAgents);
-        servers.put("knowledge-graph-general-query-service", generalQueryService);
-        
+//        JSONObject generalQueryService = new JSONObject();
+//        generalQueryService.put("name", "knowledge-graph-general-query-service");
+//        generalQueryService.put("transport", "sse");
+//        generalQueryService.put("env", null);
+//        generalQueryService.put("url", "http://192.168.3.78:5823/sse");
+//        JSONArray generalTools = new JSONArray();
+//        generalTools.add("query_celebrity_relationships");
+//        generalQueryService.put("enabled_tools", generalTools);
+//        JSONArray generalAgents = new JSONArray();
+//        generalAgents.add("researcher");
+//        generalAgents.add("coder");
+//        generalQueryService.put("add_to_agents", generalAgents);
+//        servers.put("knowledge-graph-general-query-service", generalQueryService);
+//
         // knowledge-graph-algorithrm-service
         JSONObject algorithmService = new JSONObject();
         algorithmService.put("name", "knowledge-graph-algorithrm-service");
@@ -96,6 +96,7 @@ public class ChatRequestBuilderService {
         algorithmTools.add("similarity_between_stars");
         algorithmTools.add("mutual_friend_between_stars");
         algorithmTools.add("dream_team_common_works");
+        algorithmTools.add("query_celebrity_relationships");
         algorithmService.put("enabled_tools", algorithmTools);
         JSONArray algorithmAgents = new JSONArray();
         algorithmAgents.add("researcher");
