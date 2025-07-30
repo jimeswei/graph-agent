@@ -4,14 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="增加问题提取功能">
+    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="增加返回点数据">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/create_tables.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/doc/接口设计.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/接口设计.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ChatStreamController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/ChatStreamController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/McpToolResultQueryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/AgentProcessController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultQueryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultQueryService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,6 +15,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -34,6 +32,9 @@
   <component name="MavenRunner">
     <option name="skipTests" value="true" />
   </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="2" />
   </component>
@@ -46,29 +47,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Maven.graph-agent [clean,compile,package].executor&quot;: &quot;Run&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SONARLINT_PRECOMMIT_ANALYSIS&quot;: &quot;true&quot;,
-    &quot;Spring Boot.AgentApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/admin/workspace/graph-agent&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Maven.graph-agent [clean,compile,package].executor": "Run",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SONARLINT_PRECOMMIT_ANALYSIS": "true",
+    "Spring Boot.AgentApplication.executor": "Run",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/admin/workspace/graph-agent",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "MavenSettings",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
@@ -114,7 +115,12 @@
       <workItem from="1753346598521" duration="10830000" />
       <workItem from="1753408283943" duration="7062000" />
       <workItem from="1753415670928" duration="758000" />
-      <workItem from="1753424937215" duration="1244000" />
+      <workItem from="1753424937215" duration="6302000" />
+      <workItem from="1753431767750" duration="34097000" />
+      <workItem from="1753757534811" duration="193000" />
+      <workItem from="1753759330525" duration="2568000" />
+      <workItem from="1753769631559" duration="12028000" />
+      <workItem from="1753841344272" duration="16979000" />
     </task>
     <task id="LOCAL-00001" summary="优化参数">
       <option name="closed" value="true" />
@@ -172,11 +178,94 @@
       <option name="project" value="LOCAL" />
       <updated>1753412579496</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="增加问题提取功能">
+      <option name="closed" value="true" />
+      <created>1753426199169</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1753426199169</updated>
+    </task>
+    <task id="LOCAL-00009" summary="提交">
+      <option name="closed" value="true" />
+      <created>1753441386906</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1753441386906</updated>
+    </task>
+    <task id="LOCAL-00010" summary="优化sessionid">
+      <option name="closed" value="true" />
+      <created>1753692069846</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1753692069846</updated>
+    </task>
+    <task id="LOCAL-00011" summary="优化sessionid">
+      <option name="closed" value="true" />
+      <created>1753699352904</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1753699352904</updated>
+    </task>
+    <task id="LOCAL-00012" summary="优化mcp">
+      <option name="closed" value="true" />
+      <created>1753770167176</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1753770167176</updated>
+    </task>
+    <task id="LOCAL-00013" summary="优化mcp">
+      <option name="closed" value="true" />
+      <created>1753774338068</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1753774338068</updated>
+    </task>
+    <task id="LOCAL-00014" summary="增加查询工具接口">
+      <option name="closed" value="true" />
+      <created>1753776813490</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1753776813490</updated>
+    </task>
+    <task id="LOCAL-00015" summary="增加返回点数据">
+      <option name="closed" value="true" />
+      <created>1753780478439</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1753780478439</updated>
+    </task>
+    <task id="LOCAL-00016" summary="增加返回点数据">
+      <option name="closed" value="true" />
+      <created>1753849461631</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1753849461631</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="优化参数" />
@@ -185,21 +274,11 @@
     <MESSAGE value="忽略文件模版" />
     <MESSAGE value="删除多余文件" />
     <MESSAGE value="增加问题提取功能" />
-    <option name="LAST_COMMIT_MESSAGE" value="增加问题提取功能" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-method">
-          <url>file://$PROJECT_DIR$/src/main/java/com/datacent/agent/repository/McpToolResultRepository.java</url>
-          <line>67</line>
-          <properties class="com.datacent.agent.repository.McpToolResultRepository" method="findAllToolResultsByThreadId">
-            <option name="EMULATED" value="true" />
-            <option name="WATCH_EXIT" value="false" />
-          </properties>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="提交" />
+    <MESSAGE value="优化sessionid" />
+    <MESSAGE value="优化mcp" />
+    <MESSAGE value="增加查询工具接口" />
+    <MESSAGE value="增加返回点数据" />
+    <option name="LAST_COMMIT_MESSAGE" value="增加返回点数据" />
   </component>
 </project>
