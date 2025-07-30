@@ -756,4 +756,29 @@ public class McpToolResultQueryService {
         
         return diagnostic;
     }
+    
+    /**
+     * 根据MCP工具ID查询GraphCache数据
+     * 直接根据传入的mcpToolsId作为threadId查询graph_cache表
+     * 
+     * @param mcpToolsId MCP工具ID（作为threadId使用）
+     * @return GraphCache数据列表
+     */
+    public List<GraphCache> queryGraphCacheByMcpToolsId(String mcpToolsId) {
+        log.info("根据MCP工具ID查询GraphCache，mcpToolsId: {}", mcpToolsId);
+        
+        if (mcpToolsId == null || mcpToolsId.trim().isEmpty()) {
+            log.warn("MCP工具ID不能为空");
+            return List.of();
+        }
+        
+        try {
+            List<GraphCache> results = graphCacheRepository.findByThreadId(mcpToolsId);
+            log.info("查询GraphCache完成，找到{}条记录", results.size());
+            return results;
+        } catch (Exception e) {
+            log.error("根据MCP工具ID查询GraphCache失败，mcpToolsId: {}", mcpToolsId, e);
+            return List.of();
+        }
+    }
 }

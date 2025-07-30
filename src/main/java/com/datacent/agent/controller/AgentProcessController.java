@@ -193,6 +193,23 @@ public class AgentProcessController {
     }
     
     /**
+     * 根据MCP工具ID查询GraphCache数据
+     * 直接使用mcpToolsId作为threadId查询graph_cache表
+     * 
+     * @param mcpToolsId MCP工具ID
+     * @return GraphCache数据列表
+     */
+    @GetMapping("/query/mcptools_graph_cache")
+    public ResponseEntity<List<GraphCache>> queryGraphCacheByMcpToolsId(@RequestParam String mcpToolsId) {
+        
+        log.info("接收到根据MCP工具ID查询GraphCache请求，mcpToolsId: {}", mcpToolsId);
+        
+        List<GraphCache> results = mcpToolResultQueryService.queryGraphCacheByMcpToolsId(mcpToolsId);
+        
+        return ResponseEntity.ok(results);
+    }
+    
+    /**
      * 调试接口：查看指定threadId的详细处理过程
      * 
      * @param threadId 线程ID
