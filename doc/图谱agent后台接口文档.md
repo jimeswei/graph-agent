@@ -41,7 +41,8 @@ application/json
                     "similarity_between_stars",
                     "mutual_friend_between_stars",
                     "dream_team_common_works",
-                    "query_celebrity_relationships"
+                    "query_celebrity_relationships",
+                   "recent_common_celebrity_event"
                 ],
                 "add_to_agents": [
                     "researcher",

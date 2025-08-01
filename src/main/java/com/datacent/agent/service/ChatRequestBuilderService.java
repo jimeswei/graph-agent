@@ -83,6 +83,7 @@ public class ChatRequestBuilderService {
         algorithmTools.add("mutual_friend_between_stars");
         algorithmTools.add("dream_team_common_works");
         algorithmTools.add("query_celebrity_relationships");
+        algorithmTools.add("recent_common_celebrity_event");
         algorithmService.put("enabled_tools", algorithmTools);
         JSONArray algorithmAgents = new JSONArray();
         algorithmAgents.add("researcher");
