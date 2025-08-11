@@ -7,8 +7,10 @@ import com.datacent.agent.dto.McpToolResultQueryDTO;
 import com.datacent.agent.dto.McpToolNameDTO;
 import com.datacent.agent.dto.McpToolDetailQueryDTO;
 import com.datacent.agent.entity.GraphCache;
+import com.datacent.agent.entity.AgentReport;
 import com.datacent.agent.repository.GraphCacheRepository;
 import com.datacent.agent.repository.McpToolResultRepository;
+import com.datacent.agent.repository.AgentReportRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,8 @@ public class McpToolResultQueryService {
     private final McpToolResultRepository mcpToolResultRepository;
     
     private final GraphCacheRepository graphCacheRepository;
+    
+    private final AgentReportRepository agentReportRepository;
     
     private final GraphQueryService graphQueryService;
 
@@ -778,6 +782,49 @@ public class McpToolResultQueryService {
             return results;
         } catch (Exception e) {
             log.error("根据MCP工具ID查询GraphCache失败，mcpToolsId: {}", mcpToolsId, e);
+            return List.of();
+        }
+    }
+    
+    /**
+     * 根据线程ID查询代理报告
+     * 查询agent_report表中的报告数据，返回格式化的JSON对象列表
+     * 
+     * @param threadId 线程ID
+     * @return 代理报告列表
+     */
+    public List<JSONObject> queryAgentReport(String threadId) {
+        log.info("查询代理报告，threadId: {}", threadId);
+        
+        if (threadId == null || threadId.trim().isEmpty()) {
+            log.warn("线程ID不能为空");
+            return List.of();
+        }
+        
+        try {
+            // 查询agent_report表中的数据
+            List<AgentReport> reports = agentReportRepository.findByThreadId(threadId);
+            log.info("查询到{}条代理报告", reports.size());
+            
+            // 转换为JSONObject格式
+            List<JSONObject> results = new ArrayList<>();
+            for (AgentReport report : reports) {
+                JSONObject result = new JSONObject();
+                result.put("id", report.getId());
+                result.put("threadId", report.getThreadId());
+                result.put("agent", report.getAgent());
+                result.put("content", report.getContent());
+                result.put("reasoningContent", report.getReasoningContent());
+                result.put("createdTime", report.getCreatedTime());
+                result.put("updatedTime", report.getUpdatedTime());
+                results.add(result);
+            }
+            
+            log.info("成功转换{}条报告为JSON格式", results.size());
+            return results;
+            
+        } catch (Exception e) {
+            log.error("查询代理报告失败，threadId: {}", threadId, e);
             return List.of();
         }
     }

@@ -301,4 +301,21 @@ public class AgentProcessController {
         
         return ResponseEntity.ok(response);
     }
+    
+    /**
+     * 根据线程ID查询代理报告
+     * 查询agent_report表中的所有代理报告数据
+     * 
+     * @param threadId 线程ID
+     * @return 代理报告列表
+     */
+    @GetMapping("/query/agent_report")
+    public ResponseEntity<List<JSONObject>> queryAgentReport(@RequestParam String threadId) {
+        
+        log.info("接收到代理报告查询请求，threadId: {}", threadId);
+        
+        List<JSONObject> results = mcpToolResultQueryService.queryAgentReport(threadId);
+        
+        return ResponseEntity.ok(results);
+    }
 }

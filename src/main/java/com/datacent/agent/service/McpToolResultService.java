@@ -5,9 +5,11 @@ import com.alibaba.fastjson2.JSONObject;
 import com.datacent.agent.entity.AnalysisSession;
 import com.datacent.agent.entity.McpToolResult;
 import com.datacent.agent.entity.ToolCallName;
+import com.datacent.agent.entity.AgentReport;
 import com.datacent.agent.repository.AnalysisSessionRepository;
 import com.datacent.agent.repository.McpToolResultRepository;
 import com.datacent.agent.repository.ToolCallNameRepository;
+import com.datacent.agent.repository.AgentReportRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.List;
+import java.util.ArrayList;
+import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * MCP工具调用结果服务
@@ -25,9 +32,33 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class McpToolResultService {
     
+    private static final String REPORTER_AGENT = "reporter";
+    
     private final McpToolResultRepository mcpToolResultRepository;
     private final ToolCallNameRepository toolCallNameRepository;
     private final AnalysisSessionRepository analysisSessionRepository;
+    private final AgentReportRepository agentReportRepository;
+    
+    // Reporter内容缓存，Key为threadId，Value为ReporterContent对象列表
+    private final ConcurrentHashMap<String, List<ReporterContent>> reporterContentCache = new ConcurrentHashMap<>();
+    // Reporter状态缓存，记录哪些threadId正在处理reporter
+    private final ConcurrentHashMap<String, AtomicBoolean> reporterProcessingStatus = new ConcurrentHashMap<>();
+    
+    /**
+     * Reporter内容数据结构
+     */
+    private static class ReporterContent {
+        private final String content;
+        private final String reasoningContent;
+        
+        public ReporterContent(String content, String reasoningContent) {
+            this.content = content;
+            this.reasoningContent = reasoningContent;
+        }
+        
+        public String getContent() { return content; }
+        public String getReasoningContent() { return reasoningContent; }
+    }
     
     @Autowired
     private ChatStreamService chatStreamService;
@@ -106,8 +137,7 @@ public class McpToolResultService {
         java.util.concurrent.atomic.AtomicInteger toolCallsCount = new java.util.concurrent.atomic.AtomicInteger(0);
 
         
-        streamData
-                .subscribeOn(Schedulers.boundedElastic())
+        streamData.subscribeOn(Schedulers.boundedElastic())
                 .subscribe(
                     chunk -> {
                         // 实时处理每个数据块
@@ -115,6 +145,14 @@ public class McpToolResultService {
                     },
                     error -> {
                         log.error("MCP工具调用结果提取失败", error);
+                        
+                        // 在异常情况下也要尝试保存已收集的reporter内容
+                        try {
+                            saveReporter(threadId);
+                        } catch (Exception e) {
+                            log.error("异常情况下保存reporter失败: threadId={}", threadId, e);
+                        }
+                        
                         // 更新会话状态为失败
                         updateAnalysisSessionStatus(threadId, false, "流数据处理失败: " + error.getMessage(),
                                                    validResults.get(), toolCallsCount.get());
@@ -123,6 +161,10 @@ public class McpToolResultService {
                         // 流处理完成
                         log.info("提取完成，会话ID: {}, 共找到{}个包含tool_call_id的数据块，{}个工具调用",
                                 threadId, validResults.get(), toolCallsCount.get());
+                        
+                        // 检查是否有reporter内容需要保存
+                        saveReporter(threadId);
+                        
                         // 更新会话状态为成功
                         updateAnalysisSessionStatus(threadId, true, "处理成功",
                                                    validResults.get(), toolCallsCount.get());
@@ -196,7 +238,37 @@ public class McpToolResultService {
             if (!jsonStr.isEmpty()) {
                 JSONObject jsonData = com.alibaba.fastjson2.JSON.parseObject(jsonStr);
                 
-                // 检查是否包含tool_call_id
+                // 检查是否有finish_reason为stop，如果有则停止处理
+                String finishReason = jsonData.getString("finish_reason");
+                if ("stop".equals(finishReason)) {
+                    log.info("检测到finish_reason=stop，threadId: {}，停止处理并保存reporter内容", threadId);
+                    saveReporter(threadId);
+                    return; // 停止处理后续数据
+                }
+                
+                // 检查是否是reporter代理（无论是否有tool_call_id）
+                String agent = jsonData.getString("agent");
+                if (agent != null) {
+                    if (REPORTER_AGENT.equals(agent)) {
+                        String content = jsonData.getString("content");
+                        String reasoningContent = jsonData.getString("reasoning_content");
+                        
+                        // 只要content或reasoning_content有一个不为空就收集
+                        if ((content != null && !content.trim().isEmpty()) || 
+                            (reasoningContent != null && !reasoningContent.trim().isEmpty())) {
+                            collectReporterContent(threadId, content, reasoningContent);
+                        }
+                    }
+                    // 记录所有agent类型以便调试（仅在debug级别）
+                    if (log.isDebugEnabled() && !agent.equals("user") && !agent.equals("assistant")) {
+                        log.debug("Agent: {}, Role: {}, Content length: {}, Reasoning length: {}", 
+                                agent, jsonData.getString("role"), 
+                                jsonData.getString("content") != null ? jsonData.getString("content").length() : 0,
+                                jsonData.getString("reasoning_content") != null ? jsonData.getString("reasoning_content").length() : 0);
+                    }
+                }
+                
+                // 检查是否包含tool_call_id（原有逻辑）
                 String toolCallId = jsonData.getString("tool_call_id");
                 if (toolCallId != null && !toolCallId.trim().isEmpty()) {
                     int currentCount = validResults.incrementAndGet();
@@ -323,6 +395,110 @@ public class McpToolResultService {
         }
         
         return null;
+    }
+    
+    /**
+     * 收集reporter代理的内容
+     * 将同一个threadId的reporter内容和reasoning_content缓存起来
+     * @param threadId 线程ID
+     * @param content 内容
+     * @param reasoningContent reasoning内容
+     */
+    private void collectReporterContent(String threadId, String content, String reasoningContent) {
+        if (threadId == null || threadId.trim().isEmpty()) {
+            return;
+        }
+        
+        // 如果content和reasoningContent都为null或空，则不收集
+        if ((content == null || content.trim().isEmpty()) && 
+            (reasoningContent == null || reasoningContent.trim().isEmpty())) {
+            return;
+        }
+        
+        try {
+            reporterProcessingStatus.computeIfAbsent(threadId, k -> new AtomicBoolean(true));
+            
+            List<ReporterContent> contentList = reporterContentCache.computeIfAbsent(threadId, k -> new ArrayList<>());
+            
+            synchronized (contentList) {
+                contentList.add(new ReporterContent(content, reasoningContent));
+            }
+            
+            log.debug("收集reporter内容: threadId={}, content长度={}, reasoning长度={}", 
+                     threadId, 
+                     content != null ? content.length() : 0,
+                     reasoningContent != null ? reasoningContent.length() : 0);
+        } catch (Exception e) {
+            log.error("收集reporter内容失败: threadId={}", threadId, e);
+        }
+    }
+    
+    /**
+     * 保存reporter的完整内容
+     * 当流处理完成时调用，将同一个threadId的reporter内容拼接并保存到agent_report表
+     * @param threadId 线程ID
+     */
+    public void saveReporter(String threadId) {
+        if (threadId == null || threadId.trim().isEmpty()) {
+            return;
+        }
+        
+        try {
+            List<ReporterContent> contentList = reporterContentCache.get(threadId);
+            if (contentList == null || contentList.isEmpty()) {
+                log.debug("没有找到reporter内容需要保存: threadId={}", threadId);
+                return;
+            }
+            
+            StringBuilder fullContent = new StringBuilder();
+            StringBuilder fullReasoningContent = new StringBuilder();
+            
+            for (ReporterContent reporterContent : contentList) {
+                if (reporterContent.getContent() != null && !reporterContent.getContent().trim().isEmpty()) {
+                    fullContent.append(reporterContent.getContent());
+                }
+                if (reporterContent.getReasoningContent() != null && !reporterContent.getReasoningContent().trim().isEmpty()) {
+                    fullReasoningContent.append(reporterContent.getReasoningContent());
+                }
+            }
+            
+            // 如果content和reasoningContent都为空，则不保存
+            if (fullContent.isEmpty() && fullReasoningContent.isEmpty()) {
+                log.debug("reporter内容和reasoning内容都为空，不保存: threadId={}", threadId);
+                return;
+            }
+            
+            AgentReport report = AgentReport.builder()
+                    .threadId(threadId)
+                    .agent(REPORTER_AGENT)
+                    .content(fullContent.length() > 0 ? fullContent.toString() : null)
+                    .reasoningContent(fullReasoningContent.length() > 0 ? fullReasoningContent.toString() : null)
+                    .build();
+            
+            AgentReport savedReport = agentReportRepository.save(report);
+            
+            log.info("保存reporter报告成功: threadId={}, reportId={}, content长度={}, reasoning长度={}", 
+                    threadId, savedReport.getId(), 
+                    fullContent.length(), fullReasoningContent.length());
+            
+        } catch (Exception e) {
+            log.error("保存reporter报告失败: threadId={}", threadId, e);
+        } finally {
+            clearReporterCache(threadId);
+        }
+    }
+    
+    /**
+     * 清理reporter相关缓存
+     * @param threadId 线程ID
+     */
+    private void clearReporterCache(String threadId) {
+        try {
+            reporterContentCache.remove(threadId);
+            reporterProcessingStatus.remove(threadId);
+        } catch (Exception e) {
+            log.error("清理reporter缓存失败: threadId={}", threadId, e);
+        }
     }
     
 }
