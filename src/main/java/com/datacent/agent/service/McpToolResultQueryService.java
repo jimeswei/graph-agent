@@ -8,9 +8,12 @@ import com.datacent.agent.dto.McpToolNameDTO;
 import com.datacent.agent.dto.McpToolDetailQueryDTO;
 import com.datacent.agent.entity.GraphCache;
 import com.datacent.agent.entity.AgentReport;
+import com.datacent.agent.entity.McpToolResult;
+import com.datacent.agent.entity.ToolCallName;
 import com.datacent.agent.repository.GraphCacheRepository;
 import com.datacent.agent.repository.McpToolResultRepository;
 import com.datacent.agent.repository.AgentReportRepository;
+import com.datacent.agent.repository.ToolCallNameRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,6 +42,10 @@ public class McpToolResultQueryService {
     private final AgentReportRepository agentReportRepository;
     
     private final GraphQueryService graphQueryService;
+    
+    private final McpToolResultCacheService mcpToolResultCacheService;
+    
+    private final ToolCallNameRepository toolCallNameRepository;
 
 
     
@@ -159,6 +166,106 @@ public class McpToolResultQueryService {
         log.info("成功提取{}条有效记录", formattedResults.size());
         return formattedResults;
     }
+    
+    /**
+     * 优先从缓存队列查询单条MCP工具调用结果，队列为空时查询数据库
+     * 参考queryMcpTools的逻辑，但每次只返回一条数据
+     * 
+     * @param threadId 线程ID
+     * @return 格式化后的单条工具调用结果，如果没有数据则返回null
+     */
+    public JSONObject queryMcpTool(String threadId) {
+        log.info("查询单条MCP工具结果，threadId: {}", threadId);
+        
+        if (threadId == null || threadId.trim().isEmpty()) {
+            log.warn("线程ID不能为空");
+            return null;
+        }
+        
+        try {
+            // 1. 优先从缓存队列获取单条MCP工具调用结果（破坏性读取）
+            McpToolResult cacheResult = mcpToolResultCacheService.pollFromQueue(threadId);
+            
+            if (cacheResult != null) {
+                log.info("从缓存队列获取到单条工具调用结果，toolCallId: {}", cacheResult.getToolCallId());
+                
+                // 通过toolCallId获取工具名称
+                String toolName = getToolNameByCallId(cacheResult.getToolCallId());
+                if (toolName == null) {
+                    log.warn("无法获取工具名称，toolCallId: {}", cacheResult.getToolCallId());
+                    toolName = "unknown"; // 设置默认值
+                }
+                
+                // 处理并格式化content中的数据
+                JSONObject extractedData = extractDataFromContent(cacheResult.getContent(), toolName);
+                if (extractedData != null) {
+                    log.info("成功处理缓存中的工具调用结果");
+                    return extractedData;
+                } else {
+                    log.warn("处理缓存中的工具调用结果失败，无法提取数据");
+                    return null;
+                }
+                
+            } else {
+//                log.info("缓存队列为空，回退到数据库查询单条数据，threadId: {}", threadId);
+//
+//                // 2. 缓存为空时，从数据库获取单条工具结果
+//                List<McpToolDetailQueryDTO> rawResults = mcpToolResultRepository.findMcpToolsByThreadId(threadId);
+//
+//                if (rawResults.isEmpty()) {
+//                    log.info("数据库中也未找到threadId对应的工具结果，threadId: {}", threadId);
+//                    return null;
+//                }
+//
+//                // 获取第一条数据
+//                McpToolDetailQueryDTO dbResult = rawResults.get(0);
+//                log.info("从数据库获取到单条工具调用结果，工具名称: {}", dbResult.getName());
+//
+//                // 处理并格式化content中的数据
+//                JSONObject extractedData = extractDataFromContent(dbResult.getContent(), dbResult.getName());
+//                if (extractedData != null) {
+//                    log.info("成功处理数据库中的工具调用结果");
+//                    return extractedData;
+//                } else {
+//                    log.warn("处理数据库中的工具调用结果失败，工具名称: {}", dbResult.getName());
+//
+//                }
+                return null;
+            }
+            
+        } catch (Exception e) {
+            log.error("查询单条MCP工具结果失败，threadId: {}", threadId, e);
+            return null;
+        }
+    }
+    
+    /**
+     * 通过工具调用ID获取工具名称
+     * 
+     * @param toolCallId 工具调用ID
+     * @return 工具名称，如果未找到则返回null
+     */
+    private String getToolNameByCallId(String toolCallId) {
+        try {
+            if (toolCallId == null || toolCallId.trim().isEmpty()) {
+                return null;
+            }
+            
+            List<ToolCallName> toolCallNames = toolCallNameRepository.findByCallId(toolCallId);
+            if (!toolCallNames.isEmpty()) {
+                String toolName = toolCallNames.get(0).getName();
+                log.debug("通过toolCallId获取到工具名称: {} -> {}", toolCallId, toolName);
+                return toolName;
+            } else {
+                log.debug("未找到toolCallId对应的工具名称: {}", toolCallId);
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("通过toolCallId获取工具名称失败: {}", toolCallId, e);
+            return null;
+        }
+    }
+
     
     /**
      * 从content字段中提取数据并格式化为指定的数据结构
@@ -472,14 +579,16 @@ public class McpToolResultQueryService {
             log.warn("线程ID不能为空");
             return List.of();
         }
-        
+        // TODO 优先从队列取，队列为空查询数据库
+        mcpToolResultCacheService.pollFromQueue(threadId);
+
         // 1. 首先获取该threadId的所有工具结果
         List<McpToolResultQueryDTO> toolResults = getAllToolResultsByThreadId(threadId);
         if (toolResults.isEmpty()) {
             log.info("未找到threadId对应的工具结果，threadId: {}", threadId);
             return List.of();
         }
-        
+
         // 2. 从content字段中提取所有的id
         Set<String> extractedIds = new HashSet<>();
         for (McpToolResultQueryDTO result : toolResults) {
@@ -826,6 +935,246 @@ public class McpToolResultQueryService {
         } catch (Exception e) {
             log.error("查询代理报告失败，threadId: {}", threadId, e);
             return List.of();
+        }
+    }
+    
+    /**
+     * 从消息队列缓存中查询MCP工具调用结果
+     * 优先从缓存队列获取数据，如果缓存为空则回退到数据库查询
+     * 
+     * @param threadId 线程ID
+     * @return MCP工具调用结果列表
+     */
+    public List<McpToolResult> getToolResultsFromCache(String threadId) {
+        log.info("从消息队列缓存查询MCP工具调用结果，threadId: {}", threadId);
+        
+        if (threadId == null || threadId.trim().isEmpty()) {
+            log.warn("线程ID不能为空");
+            return List.of();
+        }
+        
+        try {
+            // 1. 首先尝试从缓存队列获取数据
+            List<McpToolResult> cacheResults = mcpToolResultCacheService.getAllFromQueue(threadId);
+            
+            if (!cacheResults.isEmpty()) {
+                log.info("从缓存队列获取到{}条MCP工具调用结果", cacheResults.size());
+                return cacheResults;
+            }
+            
+            // 2. 如果缓存为空，回退到数据库查询
+            log.debug("缓存队列为空，回退到数据库查询，threadId: {}", threadId);
+            
+            // 直接使用JPA repository方法查询完整的实体对象
+            List<McpToolResult> entityResults = mcpToolResultRepository.findByThreadId(threadId);
+            
+            log.info("从数据库回退查询获取到{}条MCP工具调用结果", entityResults.size());
+            return entityResults;
+            
+        } catch (Exception e) {
+            log.error("从消息队列缓存查询MCP工具调用结果失败，threadId: {}", threadId, e);
+            return List.of();
+        }
+    }
+    
+    /**
+     * 检查指定threadId是否存在缓存队列数据
+     * 
+     * @param threadId 线程ID
+     * @return 是否存在缓存数据
+     */
+    public boolean hasCacheData(String threadId) {
+        if (threadId == null || threadId.trim().isEmpty()) {
+            return false;
+        }
+        
+        return mcpToolResultCacheService.hasQueue(threadId) && 
+               mcpToolResultCacheService.getQueueSize(threadId) > 0;
+    }
+    
+    /**
+     * 获取缓存队列大小
+     * 
+     * @param threadId 线程ID
+     * @return 缓存队列大小
+     */
+    public int getCacheQueueSize(String threadId) {
+        if (threadId == null || threadId.trim().isEmpty()) {
+            return 0;
+        }
+        
+        return mcpToolResultCacheService.getQueueSize(threadId);
+    }
+    
+    /**
+     * 清空指定threadId的缓存队列
+     * 用于会话结束后的资源清理
+     * 
+     * @param threadId 线程ID
+     * @return 清空前的队列大小
+     */
+    public int clearCacheQueue(String threadId) {
+        if (threadId == null || threadId.trim().isEmpty()) {
+            log.warn("线程ID不能为空，无法清空缓存队列");
+            return 0;
+        }
+        
+        try {
+            int clearedSize = mcpToolResultCacheService.clearQueue(threadId);
+            log.info("清空缓存队列完成，threadId: {}, 清空前大小: {}", threadId, clearedSize);
+            return clearedSize;
+        } catch (Exception e) {
+            log.error("清空缓存队列失败，threadId: {}", threadId, e);
+            return 0;
+        }
+    }
+    
+    /**
+     * 获取消息队列缓存的统计信息
+     * 
+     * @return 缓存统计信息
+     */
+    public Map<String, Object> getCacheStatistics() {
+        try {
+            Map<String, Object> statistics = mcpToolResultCacheService.getCacheStatistics();
+            log.debug("获取缓存统计信息成功");
+            return statistics;
+        } catch (Exception e) {
+            log.error("获取缓存统计信息失败", e);
+            return Map.of("error", e.getMessage());
+        }
+    }
+    
+    /**
+     * 优先从缓存队列查询单条MCP工具调用结果，队列为空时查询数据库
+     * 参考queryGraphCache的逻辑，但每次只返回一条数据
+     * 
+     * @param threadId 线程ID
+     * @return MCP工具调用结果，如果没有数据则返回null
+     */
+    public JSONObject mcpResultCache(String threadId) {
+        log.info("开始从缓存优先查询单条MCP工具调用结果，threadId: {}", threadId);
+        
+        if (threadId == null || threadId.trim().isEmpty()) {
+            log.warn("线程ID不能为空");
+            return null;
+        }
+        
+        try {
+            // 1. 优先从缓存队列获取单条MCP工具调用结果（破坏性读取）
+            McpToolResult cacheResult = mcpToolResultCacheService.pollFromQueue(threadId);
+            
+            if (cacheResult != null) {
+                log.info("从缓存队列获取到单条工具调用结果，toolCallId: {}", cacheResult.getToolCallId());
+                
+                // 构建返回的JSON对象，包含完整的MCP工具调用结果信息
+                JSONObject result = new JSONObject();
+                result.put("threadId", cacheResult.getThreadId());
+                result.put("agent", cacheResult.getAgent());
+                result.put("resultId", cacheResult.getResultId());
+                result.put("role", cacheResult.getRole());
+                result.put("content", cacheResult.getContent());
+                result.put("toolCallId", cacheResult.getToolCallId());
+                result.put("createdTime", cacheResult.getCreatedTime());
+                result.put("updatedTime", cacheResult.getUpdatedTime());
+                result.put("source", "cache"); // 标识数据来源
+                
+                // 从content字段中提取id并查询graph_cache表
+                enhanceWithGraphCacheData(result, cacheResult.getContent());
+                
+                return result;
+            } else {
+                log.info("缓存队列为空，回退到数据库查询单条数据，threadId: {}", threadId);
+                
+                // 2. 缓存为空时，从数据库获取单条工具结果
+                List<McpToolResult> dbResults = mcpToolResultRepository.findByThreadId(threadId);
+                
+                if (dbResults.isEmpty()) {
+                    log.info("数据库中也未找到threadId对应的工具结果，threadId: {}", threadId);
+                    return null;
+                }
+                
+                // 获取第一条数据
+                McpToolResult dbResult = dbResults.get(0);
+                log.info("从数据库获取到单条工具调用结果，toolCallId: {}", dbResult.getToolCallId());
+                
+                // 构建返回的JSON对象
+                JSONObject result = new JSONObject();
+                result.put("threadId", dbResult.getThreadId());
+                result.put("agent", dbResult.getAgent());
+                result.put("resultId", dbResult.getResultId());
+                result.put("role", dbResult.getRole());
+                result.put("content", dbResult.getContent());
+                result.put("toolCallId", dbResult.getToolCallId());
+                result.put("createdTime", dbResult.getCreatedTime());
+                result.put("updatedTime", dbResult.getUpdatedTime());
+                result.put("source", "database"); // 标识数据来源
+                
+                // 从content字段中提取id并查询graph_cache表
+                enhanceWithGraphCacheData(result, dbResult.getContent());
+                
+                return result;
+            }
+            
+        } catch (Exception e) {
+            log.error("从缓存优先查询单条MCP工具调用结果失败，threadId: {}", threadId, e);
+            return null;
+        }
+    }
+    
+    /**
+     * 增强返回结果，添加graph_cache相关数据
+     * 从content字段中提取id，用提取到的id查询graph_cache表，并将结果添加到返回的JSON对象中
+     * 
+     * @param result 要增强的JSON结果对象
+     * @param content MCP工具调用结果的content内容
+     */
+    private void enhanceWithGraphCacheData(JSONObject result, String content) {
+        try {
+            // 2. 从content字段中提取所有的id
+            Set<String> extractedIds = new HashSet<>();
+            if (content != null && !content.trim().isEmpty()) {
+                Set<String> ids = extractIdsFromContent(content);
+                extractedIds.addAll(ids);
+            }
+            
+            log.info("从content字段提取到{}个唯一id", extractedIds.size());
+            
+            // 3. 使用提取到的id作为threadId查询graph_cache表
+            List<GraphCache> graphCaches = new ArrayList<>();
+            for (String id : extractedIds) {
+                List<GraphCache> caches = graphCacheRepository.findByThreadId(id);
+                graphCaches.addAll(caches);
+            }
+            
+            log.info("根据提取的id查询GraphCache完成，找到{}条记录", graphCaches.size());
+            
+            // 将GraphCache数据添加到返回结果中
+            JSONArray graphCacheArray = new JSONArray();
+            for (GraphCache cache : graphCaches) {
+                JSONObject cacheObj = new JSONObject();
+                cacheObj.put("id", cache.getId());
+                cacheObj.put("threadId", cache.getThreadId());
+                cacheObj.put("content", cache.getContent());
+                cacheObj.put("createdTime", cache.getCreatedTime());
+                cacheObj.put("updatedTime", cache.getUpdatedTime());
+                graphCacheArray.add(cacheObj);
+            }
+            
+            // 添加GraphCache相关信息到结果中
+            result.put("extractedIds", new JSONArray(extractedIds));
+            result.put("extractedIdsCount", extractedIds.size());
+            result.put("graphCaches", graphCacheArray);
+            result.put("graphCachesCount", graphCaches.size());
+            
+        } catch (Exception e) {
+            log.error("增强返回结果时提取GraphCache数据失败", e);
+            // 出错时添加错误信息，但不影响原有数据的返回
+            result.put("graphCacheError", e.getMessage());
+            result.put("extractedIds", new JSONArray());
+            result.put("extractedIdsCount", 0);
+            result.put("graphCaches", new JSONArray());
+            result.put("graphCachesCount", 0);
         }
     }
 }

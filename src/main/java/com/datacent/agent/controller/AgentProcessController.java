@@ -165,14 +165,48 @@ public class AgentProcessController {
      * @param threadId 线程ID
      * @return MCP工具调用结果列表
      */
-    @GetMapping("/query/mcp_tools")
-    public ResponseEntity<List<JSONObject>> queryMcpToolsByThreadId(@RequestParam String threadId) {
-        
+//    @GetMapping("/query/mcp_tools")
+//    public ResponseEntity<List<JSONObject>> queryMcpToolsByThreadId(@RequestParam String threadId) {
+//
+//        log.info("接收到MCP工具查询请求，threadId: {}", threadId);
+//
+//        List<JSONObject> results = mcpToolResultQueryService.queryMcpTools(threadId);
+//
+//        return ResponseEntity.ok(results);
+//    }
+
+
+    @GetMapping("/query/mcp_tool")
+    public ResponseEntity<JSONObject> queryMcpToolByThreadId(@RequestParam String threadId) {
+
         log.info("接收到MCP工具查询请求，threadId: {}", threadId);
-        
-        List<JSONObject> results = mcpToolResultQueryService.queryMcpTools(threadId);
-        
+
+        JSONObject results = mcpToolResultQueryService.queryMcpTool(threadId);
+
         return ResponseEntity.ok(results);
+    }
+    
+    /**
+     * 从缓存优先查询单条MCP工具调用结果
+     * 优先从队列获取数据，队列为空时回退到数据库查询，每次只返回一条数据
+     * 返回格式与queryMcpTools相同，但只返回单条数据
+     * 
+     * @param threadId 线程ID
+     * @return 单条格式化的MCP工具调用结果，如果没有数据则返回204 No Content
+     */
+    @GetMapping("/cache/mcp_tool")
+    public ResponseEntity<JSONObject> queryMcpToolFromCache(@RequestParam String threadId) {
+        
+        log.info("接收到缓存优先单条MCP工具查询请求，threadId: {}", threadId);
+        
+        JSONObject result = mcpToolResultQueryService.queryMcpTool(threadId);
+        
+        if (result != null) {
+            return ResponseEntity.ok(result);
+        } else {
+            // 如果没有数据，返回204 No Content状态码
+            return ResponseEntity.noContent().build();
+        }
     }
     
     /**
@@ -317,5 +351,28 @@ public class AgentProcessController {
         List<JSONObject> results = mcpToolResultQueryService.queryAgentReport(threadId);
         
         return ResponseEntity.ok(results);
+    }
+    
+    /**
+     * 从缓存优先查询单条MCP工具调用结果
+     * 优先从队列获取数据，队列为空时回退到数据库查询
+     * 每次只返回一条数据，支持逐条消费模式
+     * 
+     * @param threadId 线程ID
+     * @return 单条MCP工具调用结果，如果没有数据则返回null
+     */
+    @GetMapping("/cache/mcp_result")
+    public ResponseEntity<JSONObject> mcpResultCache(@RequestParam String threadId) {
+        
+        log.info("接收到缓存优先MCP工具结果查询请求，threadId: {}", threadId);
+        
+        JSONObject result = mcpToolResultQueryService.mcpResultCache(threadId);
+        
+        if (result != null) {
+            return ResponseEntity.ok(result);
+        } else {
+            // 如果没有数据，返回204 No Content状态码
+            return ResponseEntity.noContent().build();
+        }
     }
 }

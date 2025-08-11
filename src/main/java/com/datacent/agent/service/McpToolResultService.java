@@ -38,6 +38,7 @@ public class McpToolResultService {
     private final ToolCallNameRepository toolCallNameRepository;
     private final AnalysisSessionRepository analysisSessionRepository;
     private final AgentReportRepository agentReportRepository;
+    private final McpToolResultCacheService mcpToolResultCacheService;
     
     // Reporter内容缓存，Key为threadId，Value为ReporterContent对象列表
     private final ConcurrentHashMap<String, List<ReporterContent>> reporterContentCache = new ConcurrentHashMap<>();
@@ -337,8 +338,13 @@ public class McpToolResultService {
                     .toolCallId(toolCallId)
                     .build();
             
+            // 保存到消息队列中，支持多用户并发访问
+            mcpToolResultCacheService.addToQueue(sessionThreadId, toolResult);
+            log.debug("✅ 保存MCP工具调用结果到缓存队列: thread_id={}, tool_call_id={}", sessionThreadId, toolCallId);
+            
+            // 持久化到数据库（保持原有逻辑不变）
             mcpToolResultRepository.save(toolResult);
-            log.debug("✅ 保存MCP工具调用结果: thread_id={}, tool_call_id={}", sessionThreadId, toolCallId);
+            log.debug("✅ 保存MCP工具调用结果到数据库: thread_id={}, tool_call_id={}", sessionThreadId, toolCallId);
         } catch (Exception e) {
             log.error("❌ 保存MCP工具调用结果失败: thread_id={}, tool_call_id={}", sessionThreadId, toolCallId, e);
         }
