@@ -58,8 +58,8 @@ public class ChatRequestBuilderService {
         // 固定参数（根据文档要求不能变）
         request.put("resources", new JSONArray());
         request.put("auto_accepted_plan", true);
-        request.put("enable_deep_thinking", false);
-        request.put("enable_background_investigation", false);
+        request.put("enable_deep_thinking", true);
+        request.put("enable_background_investigation", true);
         request.put("max_plan_iterations", 1);
         request.put("max_step_num", 5);
         request.put("max_search_results", 5);

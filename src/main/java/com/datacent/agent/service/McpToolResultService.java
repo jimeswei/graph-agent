@@ -110,7 +110,7 @@ public class McpToolResultService {
                     })
                     .cache(); // 缓存流数据供后续处理使用
             
-            // 在后台异步处理数据提取和保存
+            // 数据提取和保存
             extractMcpToolResults(streamData, threadId);
             
             return streamData;
