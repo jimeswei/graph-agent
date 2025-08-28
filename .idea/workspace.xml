@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="current_plan查询接口">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/CurrentPlanService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/CurrentPlanService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -144,7 +143,7 @@
       <workItem from="1755845293202" duration="12829000" />
       <workItem from="1756086223285" duration="7813000" />
       <workItem from="1756173533477" duration="20017000" />
-      <workItem from="1756264927364" duration="27896000" />
+      <workItem from="1756264927364" duration="29967000" />
     </task>
     <task id="LOCAL-00001" summary="优化参数">
       <option name="closed" value="true" />
