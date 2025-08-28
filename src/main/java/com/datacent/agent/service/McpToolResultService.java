@@ -6,10 +6,14 @@ import com.datacent.agent.entity.AnalysisSession;
 import com.datacent.agent.entity.McpToolResult;
 import com.datacent.agent.entity.ToolCallName;
 import com.datacent.agent.entity.AgentReport;
+import com.datacent.agent.entity.CurrentPlan;
+import com.datacent.agent.entity.PlanStep;
 import com.datacent.agent.repository.AnalysisSessionRepository;
 import com.datacent.agent.repository.McpToolResultRepository;
 import com.datacent.agent.repository.ToolCallNameRepository;
 import com.datacent.agent.repository.AgentReportRepository;
+import com.datacent.agent.repository.CurrentPlanRepository;
+import com.datacent.agent.repository.PlanStepRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +42,8 @@ public class McpToolResultService {
     private final ToolCallNameRepository toolCallNameRepository;
     private final AnalysisSessionRepository analysisSessionRepository;
     private final AgentReportRepository agentReportRepository;
+    private final CurrentPlanRepository currentPlanRepository;
+    private final PlanStepRepository planStepRepository;
     private final McpToolResultCacheService mcpToolResultCacheService;
     
     // Reporter内容缓存，Key为threadId，Value为ReporterContent对象列表
@@ -109,9 +115,14 @@ public class McpToolResultService {
                         return Flux.just("data: " + chatRequestBuilderService.createErrorResponse("流式数据获取失败: " + throwable.getMessage()).toJSONString() + "\n\n");
                     })
                     .cache(); // 缓存流数据供后续处理使用
-            
+
+            // 提取current_plan
+            extractCurrentPlan(streamData, threadId);
+
             // 数据提取和保存
             extractMcpToolResults(streamData, threadId);
+
+
             
             return streamData;
             
@@ -504,6 +515,186 @@ public class McpToolResultService {
             reporterProcessingStatus.remove(threadId);
         } catch (Exception e) {
             log.error("清理reporter缓存失败: threadId={}", threadId, e);
+        }
+    }
+    
+    /**
+     * 提取current_plan内容
+     * 从流式数据中提取current_plan相关信息并保存到数据库
+     * @param streamData 流式数据
+     * @param threadId 线程ID
+     */
+    public void extractCurrentPlan(Flux<String> streamData, String threadId) {
+        log.info("开始从流式数据中提取current_plan信息，threadId: {}", threadId);
+        
+        streamData.subscribeOn(Schedulers.boundedElastic())
+                .subscribe(
+                    chunk -> {
+                        // 处理每个数据块，查找current_plan内容
+                        processChunkForCurrentPlan(chunk, threadId);
+                    },
+                    error -> {
+                        log.error("提取current_plan失败", error);
+                    },
+                    () -> {
+                        log.info("current_plan提取完成，threadId: {}", threadId);
+                    }
+                );
+    }
+    
+    /**
+     * 处理单个数据块，提取current_plan相关数据
+     * @param chunk 数据块
+     * @param threadId 线程ID
+     */
+    private void processChunkForCurrentPlan(String chunk, String threadId) {
+        // 处理数据块 - 支持两种格式：SSE格式("data:"开头)和纯JSON格式
+        String jsonStr;
+        if (chunk.startsWith("data:")) {
+            jsonStr = chunk.substring(5).trim();
+        } else {
+            jsonStr = chunk.trim();
+        }
+        
+        try {
+            if (!jsonStr.isEmpty()) {
+                JSONObject jsonData = com.alibaba.fastjson2.JSON.parseObject(jsonStr);
+                
+                // 查找current_plan字段
+                Object currentPlanObj = jsonData.get("current_plan");
+                if (currentPlanObj != null) {
+                    log.info("找到current_plan数据，threadId: {}", threadId);
+                    
+                    JSONObject currentPlanJson = null;
+                    if (currentPlanObj instanceof JSONObject) {
+                        currentPlanJson = (JSONObject) currentPlanObj;
+                    } else if (currentPlanObj instanceof String) {
+                        // 如果是字符串形式的JSON，尝试解析
+                        try {
+                            currentPlanJson = com.alibaba.fastjson2.JSON.parseObject((String) currentPlanObj);
+                        } catch (Exception e) {
+                            log.warn("解析current_plan字符串JSON失败: {}", e.getMessage());
+                            return;
+                        }
+                    }
+                    
+                    if (currentPlanJson != null) {
+
+                        // 提取并保存current_plan数据
+                        saveCurrentPlan(currentPlanJson, threadId);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // 跳过无效数据块，但记录错误
+            log.debug("跳过无效数据块: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * 保存current_plan数据到数据库
+     * @param currentPlanJson current_plan的JSON数据
+     * @param threadId 线程ID
+     */
+    private void saveCurrentPlan(JSONObject currentPlanJson, String threadId) {
+        try {
+            // 提取current_plan基本信息
+            String planId = currentPlanJson.getString("id");
+            if (planId == null || planId.trim().isEmpty()) {
+                planId = UUID.randomUUID().toString();
+            }
+            
+            String locale = currentPlanJson.getString("locale");
+            Boolean hasEnoughContext = currentPlanJson.getBoolean("has_enough_context");
+            String thought = currentPlanJson.getString("thought");
+            String title = currentPlanJson.getString("title");
+            
+            // 检查是否已存在该计划
+            if (currentPlanRepository.existsByPlanId(planId)) {
+                log.debug("计划已存在，跳过保存: planId={}", planId);
+                return;
+            }
+            
+            // 创建并保存CurrentPlan实体
+            CurrentPlan currentPlan = CurrentPlan.builder()
+                    .threadId(threadId)
+                    .planId(planId)
+                    .locale(locale != null ? locale : "zh-CN")
+                    .hasEnoughContext(hasEnoughContext != null ? hasEnoughContext : false)
+                    .thought(thought)
+                    .title(title != null ? title : "")
+                    .build();
+
+            currentPlanRepository.save(currentPlan);
+            log.info("保存current_plan成功: threadId={}, planId={}, title={}", threadId, planId, title);
+            
+            // 提取并保存steps
+            JSONArray stepsArray = currentPlanJson.getJSONArray("steps");
+            if (stepsArray != null && !stepsArray.isEmpty()) {
+                savePlanSteps(stepsArray, planId);
+            }
+            
+        } catch (Exception e) {
+            log.error("保存current_plan失败: threadId={}", threadId, e);
+        }
+    }
+    
+    /**
+     * 保存plan_steps数据到数据库
+     * @param stepsArray 步骤数组
+     * @param planId 计划ID
+     */
+    private void savePlanSteps(JSONArray stepsArray, String planId) {
+        try {
+            for (int i = 0; i < stepsArray.size(); i++) {
+                JSONObject stepJson = stepsArray.getJSONObject(i);
+                if (stepJson != null) {
+                    Integer stepIndex = stepJson.getInteger("index");
+                    if (stepIndex == null) {
+                        stepIndex = i; // 如果没有index，使用数组索引
+                    }
+                    
+                    Boolean needGetData = stepJson.getBoolean("need_get_data");
+                    String title = stepJson.getString("title");
+                    String description = stepJson.getString("description");
+                    String stepType = stepJson.getString("step_type");
+                    String executionRes = stepJson.getString("execution_res");
+                    String statusStr = stepJson.getString("status");
+                    
+                    // 转换状态
+                    PlanStep.StepStatus status = PlanStep.StepStatus.pending;
+                    if (statusStr != null && !statusStr.trim().isEmpty()) {
+                        try {
+                            status = PlanStep.StepStatus.valueOf(statusStr);
+                        } catch (IllegalArgumentException e) {
+                            log.warn("无效的步骤状态: {}, 使用默认值pending", statusStr);
+                        }
+                    }
+                    
+                    // 检查是否已存在该步骤
+                    if (planStepRepository.findByPlanIdAndStepIndex(planId, stepIndex).isPresent()) {
+                        log.debug("步骤已存在，跳过保存: planId={}, stepIndex={}", planId, stepIndex);
+                        continue;
+                    }
+                    
+                    // 创建并保存PlanStep实体
+                    PlanStep planStep = PlanStep.builder()
+                            .planId(planId)
+                            .stepIndex(stepIndex)
+                            .needGetData(needGetData != null ? needGetData : true)
+                            .title(title != null ? title : "")
+                            .description(description)
+                            .stepType(stepType != null ? stepType : "research")
+                            .executionRes(executionRes)
+                            .status(status)
+                            .build();
+                            
+                    planStepRepository.save(planStep);
+                    log.info("保存plan_step成功: planId={}, stepIndex={}, title={}", planId, stepIndex, title);
+                }
+            }
+        } catch (Exception e) {
+            log.error("保存plan_steps失败: planId={}", planId, e);
         }
     }
     

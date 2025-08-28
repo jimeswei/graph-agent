@@ -148,3 +148,42 @@ CREATE TABLE `employee_config` (
    `updated_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
    UNIQUE KEY uk_thread_employee (`thread_id`, `user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='员工模型配置表';
+
+-- ----------------------------
+-- Table structure for current_plan
+-- ----------------------------
+DROP TABLE IF EXISTS `current_plan`;
+CREATE TABLE `current_plan` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '自增主键',
+    `thread_id` VARCHAR(100) NOT NULL COMMENT '线程ID',
+    `plan_id` VARCHAR(100) NOT NULL COMMENT '计划唯一标识',
+    `locale` VARCHAR(10) DEFAULT 'zh-CN' COMMENT '语言环境',
+    `has_enough_context` BOOLEAN DEFAULT FALSE COMMENT '是否有足够上下文',
+    `thought` TEXT COMMENT '思考过程',
+    `title` VARCHAR(500) NOT NULL COMMENT '计划标题',
+    `created_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX `idx_thread_id` (`thread_id`),
+    UNIQUE KEY `uk_plan_id` (`plan_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='计划表';
+
+-- ----------------------------
+-- Table structure for plan_steps
+-- ----------------------------
+DROP TABLE IF EXISTS `plan_steps`;
+CREATE TABLE `plan_steps` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '自增主键',
+    `plan_id` VARCHAR(100) NOT NULL COMMENT '计划ID，关联current_plan.plan_id',
+    `step_index` INT NOT NULL COMMENT '步骤序号',
+    `need_get_data` BOOLEAN DEFAULT TRUE COMMENT '是否需要获取数据',
+    `title` VARCHAR(500) NOT NULL COMMENT '步骤标题',
+    `description` TEXT COMMENT '步骤描述',
+    `step_type` VARCHAR(50) DEFAULT 'research' COMMENT '步骤类型：research/analysis/synthesis等',
+    `execution_res` LONGTEXT COMMENT '执行结果',
+    `status` ENUM('pending', 'in_progress', 'completed', 'failed') DEFAULT 'pending' COMMENT '执行状态',
+    `created_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX `idx_plan_id` (`plan_id`),
+    INDEX `idx_step_index` (`plan_id`, `step_index`),
+    FOREIGN KEY (`plan_id`) REFERENCES `current_plan`(`plan_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='计划步骤表';
