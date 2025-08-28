@@ -161,6 +161,8 @@ CREATE TABLE `current_plan` (
     `has_enough_context` BOOLEAN DEFAULT FALSE COMMENT '是否有足够上下文',
     `thought` TEXT COMMENT '思考过程',
     `title` VARCHAR(500) NOT NULL COMMENT '计划标题',
+    `agent` VARCHAR(50) COMMENT '代理名称',
+    `role` VARCHAR(50) COMMENT '角色',
     `created_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX `idx_thread_id` (`thread_id`),

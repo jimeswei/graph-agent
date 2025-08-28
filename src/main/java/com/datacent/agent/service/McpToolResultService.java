@@ -580,8 +580,8 @@ public class McpToolResultService {
                     
                     if (currentPlanJson != null) {
 
-                        // 提取并保存current_plan数据
-                        saveCurrentPlan(currentPlanJson, threadId);
+                        // 提取并保存current_plan数据，传递完整的JSON数据
+                        saveCurrentPlan(jsonData, threadId);
                     }
                 }
             }
@@ -593,21 +593,30 @@ public class McpToolResultService {
     
     /**
      * 保存current_plan数据到数据库
-     * @param currentPlanJson current_plan的JSON数据
+     * @param jsonData 完整的JSON数据
      * @param threadId 线程ID
      */
-    private void saveCurrentPlan(JSONObject currentPlanJson, String threadId) {
+    private void saveCurrentPlan(JSONObject jsonData, String threadId) {
         try {
-            // 提取current_plan基本信息
-            String planId = currentPlanJson.getString("id");
+            // 从外层JSON提取基本信息
+            String planId = jsonData.getString("id");
             if (planId == null || planId.trim().isEmpty()) {
-                planId = UUID.randomUUID().toString();
+               return;
             }
             
-            String locale = currentPlanJson.getString("locale");
-            Boolean hasEnoughContext = currentPlanJson.getBoolean("has_enough_context");
-            String thought = currentPlanJson.getString("thought");
-            String title = currentPlanJson.getString("title");
+            String agent = jsonData.getString("agent");
+            String role = jsonData.getString("role");
+            
+            // 从current_plan对象中提取详细信息
+            JSONObject currentPlanObj = jsonData.getJSONObject("current_plan");
+            if (currentPlanObj == null) {
+                return;
+            }
+            
+            String locale = currentPlanObj.getString("locale");
+            Boolean hasEnoughContext = currentPlanObj.getBoolean("has_enough_context");
+            String thought = currentPlanObj.getString("thought");
+            String title = currentPlanObj.getString("title");
             
             // 检查是否已存在该计划
             if (currentPlanRepository.existsByPlanId(planId)) {
@@ -619,6 +628,8 @@ public class McpToolResultService {
             CurrentPlan currentPlan = CurrentPlan.builder()
                     .threadId(threadId)
                     .planId(planId)
+                    .agent(agent)
+                    .role(role)
                     .locale(locale != null ? locale : "zh-CN")
                     .hasEnoughContext(hasEnoughContext != null ? hasEnoughContext : false)
                     .thought(thought)
@@ -626,10 +637,11 @@ public class McpToolResultService {
                     .build();
 
             currentPlanRepository.save(currentPlan);
-            log.info("保存current_plan成功: threadId={}, planId={}, title={}", threadId, planId, title);
+            log.info("保存current_plan成功: threadId={}, planId={}, agent={}, role={}, title={}", 
+                    threadId, planId, agent, role, title);
             
             // 提取并保存steps
-            JSONArray stepsArray = currentPlanJson.getJSONArray("steps");
+            JSONArray stepsArray = currentPlanObj.getJSONArray("steps");
             if (stepsArray != null && !stepsArray.isEmpty()) {
                 savePlanSteps(stepsArray, planId);
             }

@@ -4,8 +4,10 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.datacent.agent.dto.McpToolResultQueryDTO;
 import com.datacent.agent.dto.McpToolNameDTO;
+import com.datacent.agent.dto.CurrentPlanResponseDTO;
 import com.datacent.agent.entity.GraphCache;
 import com.datacent.agent.service.McpToolResultQueryService;
+import com.datacent.agent.service.CurrentPlanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * MCP工具调用结果查询控制器
@@ -26,6 +29,9 @@ public class AgentProcessController {
 
     @Autowired
     private  McpToolResultQueryService mcpToolResultQueryService;
+    
+    @Autowired
+    private CurrentPlanService currentPlanService;
     
     /**
      * 根据线程ID和工具名称查询工具执行结果
@@ -158,22 +164,6 @@ public class AgentProcessController {
         return ResponseEntity.ok(examples);
     }
     
-    /**
-     * 根据线程ID查询MCP工具调用结果
-     * 从content字段中提取id、mcp_tool_function和args信息
-     * 
-     * @param threadId 线程ID
-     * @return MCP工具调用结果列表
-     */
-//    @GetMapping("/query/mcp_tools")
-//    public ResponseEntity<List<JSONObject>> queryMcpToolsByThreadId(@RequestParam String threadId) {
-//
-//        log.info("接收到MCP工具查询请求，threadId: {}", threadId);
-//
-//        List<JSONObject> results = mcpToolResultQueryService.queryMcpTools(threadId);
-//
-//        return ResponseEntity.ok(results);
-//    }
 
 
     @GetMapping("/query/mcp_tool")
@@ -373,6 +363,35 @@ public class AgentProcessController {
         } else {
             // 如果没有数据，返回204 No Content状态码
             return ResponseEntity.noContent().build();
+        }
+    }
+    
+    /**
+     * 根据线程ID查询最新的计划及其步骤信息
+     * 先根据thread_id从current_plan表获取最新的plan_id
+     * 再根据plan_id从plan_steps表查询所有步骤信息
+     * 
+     * @param threadId 线程ID
+     * @return 最新的计划及其步骤信息
+     */
+    @GetMapping("/query/current_plan")
+    public ResponseEntity<CurrentPlanResponseDTO> queryCurrentPlanByThreadId(@RequestParam String threadId) {
+        
+        log.info("接收到根据线程ID查询最新计划请求，threadId: {}", threadId);
+        
+        try {
+            Optional<CurrentPlanResponseDTO> result = currentPlanService.queryCurrentPlanByThreadId(threadId);
+            
+            if (result.isEmpty()) {
+                log.warn("未找到线程ID对应的计划，threadId: {}", threadId);
+                return ResponseEntity.notFound().build();
+            }
+            
+            return ResponseEntity.ok(result.get());
+            
+        } catch (Exception e) {
+            log.error("查询计划信息失败，threadId: {}", threadId, e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 }
