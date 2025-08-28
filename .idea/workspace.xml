@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="current_plan查询接口" />
+    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="current_plan查询接口">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/CurrentPlanService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/CurrentPlanService.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -141,7 +144,7 @@
       <workItem from="1755845293202" duration="12829000" />
       <workItem from="1756086223285" duration="7813000" />
       <workItem from="1756173533477" duration="20017000" />
-      <workItem from="1756264927364" duration="26111000" />
+      <workItem from="1756264927364" duration="27896000" />
     </task>
     <task id="LOCAL-00001" summary="优化参数">
       <option name="closed" value="true" />
@@ -335,7 +338,23 @@
       <option name="project" value="LOCAL" />
       <updated>1756368353161</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="current_plan查询接口">
+      <option name="closed" value="true" />
+      <created>1756368794023</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1756368794023</updated>
+    </task>
+    <task id="LOCAL-00026" summary="current_plan查询接口">
+      <option name="closed" value="true" />
+      <created>1756369832149</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1756369832149</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

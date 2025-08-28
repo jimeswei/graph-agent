@@ -59,7 +59,7 @@ public class ChatStreamService {
                     String chunk = indexedChunk.getT2();
                     
                     // 详细日志输出
-                    log.info("📦 接收到流数据块 [{}]: {}", index, chunk);
+//                    log.info("📦 接收到流数据块 [{}]: {}", index, chunk);
                 })
                 .map(indexedChunk -> indexedChunk.getT2()) // 去掉索引，只返回数据
                 .doOnComplete(() -> {

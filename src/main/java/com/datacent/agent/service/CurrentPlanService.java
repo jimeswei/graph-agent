@@ -53,12 +53,24 @@ public class CurrentPlanService {
             // 2. 根据planId查询所有步骤
             List<PlanStep> planSteps = planStepRepository.findByPlanIdOrderByStepIndex(planId);
             
-            // 3. 转换为DTO
+            // 3. 找到第一个execution_res为空的步骤索引
+            Integer firstEmptyExecutionResIndex = null;
+            for (int i = 0; i < planSteps.size(); i++) {
+                PlanStep step = planSteps.get(i);
+                String executionRes = step.getExecutionRes();
+                if (executionRes == null || executionRes.trim().isEmpty()) {
+                    firstEmptyExecutionResIndex = i;
+                    break;
+                }
+            }
+            
+            // 4. 转换为DTO（带状态判断）
+            final Integer finalFirstEmptyIndex = firstEmptyExecutionResIndex;
             List<PlanStepDTO> stepDTOs = planSteps.stream()
-                    .map(this::convertToPlanStepDTO)
+                    .map(step -> convertToPlanStepDTO(step, planSteps.indexOf(step), finalFirstEmptyIndex))
                     .collect(Collectors.toList());
             
-            // 4. 构建响应DTO
+            // 5. 构建响应DTO
             CurrentPlanResponseDTO responseDTO = CurrentPlanResponseDTO.builder()
                     .id(currentPlan.getId())
                     .threadId(currentPlan.getThreadId())
@@ -87,24 +99,30 @@ public class CurrentPlanService {
     
     /**
      * 将PlanStep实体转换为PlanStepDTO
-     * 根据execution_res字段动态设置状态：
-     * - execution_res = null → 步骤未执行（pending）
-     * - execution_res = "..." → 步骤已完成（completed）
+     * 根据execution_res字段和步骤位置动态设置状态：
+     * - execution_res 不为空 → completed（已完成）
+     * - execution_res 为空，且是第一个为空的步骤 → in_progress（正在执行）
+     * - execution_res 为空，但不是第一个为空的步骤 → pending（待执行）
      * 
      * @param planStep 计划步骤实体
+     * @param currentIndex 当前步骤在列表中的索引
+     * @param firstEmptyIndex 第一个execution_res为空的步骤索引
      * @return 计划步骤DTO
      */
-    private PlanStepDTO convertToPlanStepDTO(PlanStep planStep) {
-        // 根据execution_res字段判断步骤状态
+    private PlanStepDTO convertToPlanStepDTO(PlanStep planStep, int currentIndex, Integer firstEmptyIndex) {
+        // 根据execution_res字段和步骤位置判断步骤状态
         String dynamicStatus;
         String executionRes = planStep.getExecutionRes();
         
-        if (executionRes == null || executionRes.trim().isEmpty()) {
-            // execution_res为空或null，表示步骤未执行
-            dynamicStatus = "pending";
-        } else {
+        if (executionRes != null && !executionRes.trim().isEmpty()) {
             // execution_res有值，表示步骤已完成
             dynamicStatus = "completed";
+        } else if (firstEmptyIndex != null && currentIndex == firstEmptyIndex) {
+            // execution_res为空，且是第一个为空的步骤，表示正在执行
+            dynamicStatus = "in_progress";
+        } else {
+            // execution_res为空，但不是第一个为空的步骤，表示待执行
+            dynamicStatus = "pending";
         }
         
         return PlanStepDTO.builder()
