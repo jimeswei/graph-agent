@@ -87,11 +87,26 @@ public class CurrentPlanService {
     
     /**
      * 将PlanStep实体转换为PlanStepDTO
+     * 根据execution_res字段动态设置状态：
+     * - execution_res = null → 步骤未执行（pending）
+     * - execution_res = "..." → 步骤已完成（completed）
      * 
      * @param planStep 计划步骤实体
      * @return 计划步骤DTO
      */
     private PlanStepDTO convertToPlanStepDTO(PlanStep planStep) {
+        // 根据execution_res字段判断步骤状态
+        String dynamicStatus;
+        String executionRes = planStep.getExecutionRes();
+        
+        if (executionRes == null || executionRes.trim().isEmpty()) {
+            // execution_res为空或null，表示步骤未执行
+            dynamicStatus = "pending";
+        } else {
+            // execution_res有值，表示步骤已完成
+            dynamicStatus = "completed";
+        }
+        
         return PlanStepDTO.builder()
                 .id(planStep.getId())
                 .planId(planStep.getPlanId())
@@ -101,7 +116,7 @@ public class CurrentPlanService {
                 .description(planStep.getDescription())
                 .stepType(planStep.getStepType())
                 .executionRes(planStep.getExecutionRes())
-                .status(planStep.getStatus() != null ? planStep.getStatus().name() : null)
+                .status(dynamicStatus)
                 .createdTime(planStep.getCreatedTime())
                 .updatedTime(planStep.getUpdatedTime())
                 .build();
