@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="增加缓存队列功能">
+    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="current_plan查询接口">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -133,7 +133,17 @@
       <workItem from="1754813794010" duration="26728000" />
       <workItem from="1754963451561" duration="21630000" />
       <workItem from="1755058733209" duration="1501000" />
-      <workItem from="1755063811806" duration="9667000" />
+      <workItem from="1755063811806" duration="12245000" />
+      <workItem from="1755163120171" duration="390000" />
+      <workItem from="1755175691000" duration="40209000" />
+      <workItem from="1755596073481" duration="3679000" />
+      <workItem from="1755606148028" duration="7000" />
+      <workItem from="1755606164139" duration="3486000" />
+      <workItem from="1755742326272" duration="14970000" />
+      <workItem from="1755845293202" duration="12829000" />
+      <workItem from="1756086223285" duration="7813000" />
+      <workItem from="1756173533477" duration="20017000" />
+      <workItem from="1756264927364" duration="25802000" />
     </task>
     <task id="LOCAL-00001" summary="优化参数">
       <option name="closed" value="true" />
@@ -295,7 +305,31 @@
       <option name="project" value="LOCAL" />
       <updated>1754909870637</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="修改注释">
+      <option name="closed" value="true" />
+      <created>1756189923597</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1756189923597</updated>
+    </task>
+    <task id="LOCAL-00022" summary="current_plan保存接口">
+      <option name="closed" value="true" />
+      <created>1756346476968</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1756346476968</updated>
+    </task>
+    <task id="LOCAL-00023" summary="current_plan查询接口">
+      <option name="closed" value="true" />
+      <created>1756368246486</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1756368246486</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -327,7 +361,10 @@
     <MESSAGE value="增加mcp" />
     <MESSAGE value="增加保存报告和查询报告的功能" />
     <MESSAGE value="增加缓存队列功能" />
-    <option name="LAST_COMMIT_MESSAGE" value="增加缓存队列功能" />
+    <MESSAGE value="修改注释" />
+    <MESSAGE value="current_plan保存接口" />
+    <MESSAGE value="current_plan查询接口" />
+    <option name="LAST_COMMIT_MESSAGE" value="current_plan查询接口" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
