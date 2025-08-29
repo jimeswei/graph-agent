@@ -394,4 +394,40 @@ public class AgentProcessController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    
+    /**
+     * 根据线程ID从agent_report表中提取实体并查询图数据库
+     * 实现完整的工作流：查询agent_report -> 实体提取 -> 图数据库查询
+     * 
+     * @param threadId 线程ID
+     * @return 图数据库查询结果，包含实体提取信息
+     */
+    @GetMapping("/extract/report-entity")
+    public ResponseEntity<JSONObject> extractReportEntity(@RequestParam String threadId) {
+        
+        log.info("接收到agent_report实体提取请求，threadId: {}", threadId);
+        
+        try {
+            JSONObject result = mcpToolResultQueryService.extractReportEntity(threadId);
+            
+            // 检查是否有错误
+            if (result.getBooleanValue("success")) {
+                return ResponseEntity.ok(result);
+            } else {
+                log.warn("实体提取处理失败，threadId: {}, error: {}", threadId, result.getString("error"));
+                return ResponseEntity.badRequest().body(result);
+            }
+            
+        } catch (Exception e) {
+            log.error("处理agent_report实体提取请求失败，threadId: {}", threadId, e);
+            
+            JSONObject errorResult = new JSONObject();
+            errorResult.put("success", false);
+            errorResult.put("error", "服务器内部错误: " + e.getMessage());
+            errorResult.put("threadId", threadId);
+            errorResult.put("timestamp", System.currentTimeMillis());
+            
+            return ResponseEntity.internalServerError().body(errorResult);
+        }
+    }
 }

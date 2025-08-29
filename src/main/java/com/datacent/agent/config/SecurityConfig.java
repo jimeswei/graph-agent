@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/mcp/**").permitAll()
                         .requestMatchers("/api/user/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/**/**").permitAll()
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -46,6 +46,8 @@ public class McpToolResultQueryService {
     private final McpToolResultCacheService mcpToolResultCacheService;
     
     private final ToolCallNameRepository toolCallNameRepository;
+    
+    private final ExtractEntityService extractEntityService;
 
 
     
@@ -1176,5 +1178,135 @@ public class McpToolResultQueryService {
             result.put("graphCaches", new JSONArray());
             result.put("graphCachesCount", 0);
         }
+    }
+    
+    /**
+     * 根据线程ID从agent_report表中提取实体并查询图数据库
+     * 实现完整的工作流：查询agent_report -> 实体提取 -> 图数据库查询
+     * 
+     * @param threadId 线程ID
+     * @return 图数据库查询结果，包含实体提取信息
+     */
+    public JSONObject extractReportEntity(String threadId) {
+        log.info("开始根据threadId从agent_report提取实体并查询图数据库，threadId: {}", threadId);
+        
+        if (threadId == null || threadId.trim().isEmpty()) {
+            log.warn("线程ID不能为空");
+            return createErrorResult("线程ID不能为空");
+        }
+        
+        try {
+            // 1. 根据threadId查询agent_report表
+            List<AgentReport> reports = agentReportRepository.findByThreadId(threadId);
+            if (reports.isEmpty()) {
+                log.warn("未找到对应的agent_report记录，threadId: {}", threadId);
+                return createErrorResult("未找到对应的报告记录");
+            }
+            
+            log.info("找到{}条agent_report记录", reports.size());
+            
+            // 2. 合并所有报告的content内容
+            StringBuilder combinedContent = new StringBuilder();
+            for (AgentReport report : reports) {
+                if (report.getContent() != null && !report.getContent().trim().isEmpty()) {
+                    if (combinedContent.length() > 0) {
+                        combinedContent.append("\n\n");
+                    }
+                    combinedContent.append(report.getContent());
+                }
+            }
+            
+            String contentForExtraction = combinedContent.toString();
+            if (contentForExtraction.trim().isEmpty()) {
+                log.warn("agent_report记录的content字段为空，threadId: {}", threadId);
+                return createErrorResult("报告内容为空");
+            }
+            
+            log.info("合并后的content长度: {}", contentForExtraction.length());
+            
+            // 3. 使用实体提取服务进行实体提取
+            String extractedEntitiesJson = extractEntityService.extractEntity(contentForExtraction);
+            log.info("实体提取完成，结果长度: {}", extractedEntitiesJson.length());
+            
+            // 4. 解析提取到的实体
+            JSONObject entitiesObj = JSON.parseObject(extractedEntitiesJson);
+            JSONArray targetPersons = entitiesObj.getJSONArray("target_persons");
+            JSONArray extractedEntities = entitiesObj.getJSONArray("extracted_entities");
+            
+            // 5. 提取人名列表用于图数据库查询
+            List<String> personNames = new ArrayList<>();
+            if (targetPersons != null) {
+                for (Object person : targetPersons) {
+                    if (person instanceof String) {
+                        personNames.add((String) person);
+                    }
+                }
+            }
+            
+            // 从extracted_entities中提取更多人名
+            if (extractedEntities != null) {
+                for (Object entity : extractedEntities) {
+                    if (entity instanceof JSONObject) {
+                        JSONObject entityObj = (JSONObject) entity;
+                        String type = entityObj.getString("type");
+                        String name = entityObj.getString("name");
+                        if ("celebrity".equals(type) && name != null && !personNames.contains(name)) {
+                            personNames.add(name);
+                        }
+                    }
+                }
+            }
+            
+            log.info("准备查询图数据库，实体数量: {}, 实体列表: {}", personNames.size(), personNames);
+            
+            // 6. 如果有实体，则查询图数据库
+            String graphResult = null;
+            if (!personNames.isEmpty()) {
+                graphResult = graphQueryService.queryGraphByEntityNames(personNames);
+                log.info("图数据库查询完成，结果长度: {}", graphResult != null ? graphResult.length() : 0);
+            } else {
+                log.warn("未提取到可用于图查询的实体");
+                graphResult = "{}";
+            }
+            
+            // 7. 构建返回结果
+            JSONObject result = new JSONObject();
+            result.put("threadId", threadId);
+            result.put("success", true);
+            result.put("reportCount", reports.size());
+            result.put("combinedContentLength", contentForExtraction.length());
+            
+            // 实体提取结果
+            result.put("extractedEntities", entitiesObj);
+            result.put("personNamesCount", personNames.size());
+            result.put("personNames", personNames);
+            
+            // 图数据库查询结果
+            result.put("graphQueryResult", graphResult != null ? JSON.parseObject(graphResult) : new JSONObject());
+            result.put("timestamp", System.currentTimeMillis());
+            
+            log.info("extractReportEntity完成，threadId: {}, 提取{}个实体，图查询结果长度: {}", 
+                    threadId, personNames.size(), graphResult != null ? graphResult.length() : 0);
+            
+            return result;
+            
+        } catch (Exception e) {
+            log.error("extractReportEntity执行失败，threadId: {}", threadId, e);
+            return createErrorResult("处理失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 创建错误结果对象
+     * 
+     * @param errorMessage 错误信息
+     * @return 错误结果JSON对象
+     */
+    private JSONObject createErrorResult(String errorMessage) {
+        JSONObject result = new JSONObject();
+        result.put("success", false);
+        result.put("error", errorMessage);
+        result.put("timestamp", System.currentTimeMillis());
+        return result;
     }
 }

@@ -56,11 +56,20 @@ public class ExtractEntityService {
 
             log.info("开始进行实体提取，消息长度: {}", message.length());
 
+            // 提取"## 要点"部分的内容
+            String extractedContent = extractKeyPointsSection(message);
+            if (extractedContent.trim().isEmpty()) {
+                log.warn("未找到'## 要点'部分，无法进行实体提取");
+                return createEmptyEntityResult();
+            }
+            
+            log.info("提取到'## 要点'部分内容，长度: {}", extractedContent.length());
+
             // 读取实体提取模板
             String entityTemplate = loadEntityTemplate();
             
-            // 构建提示词
-            String prompt = buildExtractionPrompt(message, entityTemplate);
+            // 构建提示词（使用提取的要点内容）
+            String prompt = buildExtractionPrompt(extractedContent, entityTemplate);
             
             // 调用大模型API
             String result = callLlmApi(prompt);
@@ -218,5 +227,65 @@ public class ExtractEntityService {
         result.put("target_persons", new ArrayList<>());
         result.put("extracted_entities", new ArrayList<>());
         return result.toJSONString();
+    }
+    
+    /**
+     * 从消息中提取"## 要点"部分的内容
+     * 
+     * @param message 完整的消息内容
+     * @return 提取到的要点部分内容，如果未找到则返回空字符串
+     */
+    private String extractKeyPointsSection(String message) {
+        if (message == null || message.trim().isEmpty()) {
+            return "";
+        }
+        
+        try {
+            // 查找"## 要点"的位置（支持多种格式）
+            String[] keyPointsMarkers = {"## 要点", "##要点", "## 要点:", "##要点:"};
+            int startIndex = -1;
+            String foundMarker = null;
+            
+            for (String marker : keyPointsMarkers) {
+                int index = message.indexOf(marker);
+                if (index != -1 && (startIndex == -1 || index < startIndex)) {
+                    startIndex = index;
+                    foundMarker = marker;
+                }
+            }
+            
+            if (startIndex == -1) {
+                log.warn("未找到'## 要点'标记");
+                return "";
+            }
+            
+            log.debug("找到要点标记: '{}' 在位置: {}", foundMarker, startIndex);
+            
+            // 跳过标记本身，找到内容开始位置
+            int contentStart = startIndex + foundMarker.length();
+            
+            // 分割内容，查找下一个markdown标题（以##开头的行）或文档结尾
+            String[] lines = message.substring(contentStart).split("\n");
+            
+            StringBuilder keyPointsContent = new StringBuilder();
+            for (String line : lines) {
+                String trimmedLine = line.trim();
+                // 如果遇到新的markdown标题（以##开头），则停止
+                if (trimmedLine.startsWith("##") && !trimmedLine.equals(foundMarker.trim())) {
+                    break;
+                }
+                keyPointsContent.append(line).append("\n");
+            }
+            
+            String result = keyPointsContent.toString().trim();
+            log.info("成功提取'## 要点'部分，内容长度: {}", result.length());
+            log.debug("提取的要点内容: {}", result.length() > 200 ? result.substring(0, 200) + "..." : result);
+            
+            return result;
+            
+        } catch (Exception e) {
+            log.error("提取'## 要点'部分失败", e);
+            return "";
+        }
     }
 }
