@@ -230,10 +230,11 @@ public class ExtractEntityService {
     }
     
     /**
-     * 从消息中提取"## 要点"部分的内容
+     * 从消息中提取"## 要点"或"## 摘要"部分的内容
+     * 优先级: 如果两者都存在，则合并两部分内容；如果只有一个，则提取该部分
      * 
      * @param message 完整的消息内容
-     * @return 提取到的要点部分内容，如果未找到则返回空字符串
+     * @return 提取到的内容，如果未找到则返回空字符串
      */
     private String extractKeyPointsSection(String message) {
         if (message == null || message.trim().isEmpty()) {
@@ -241,51 +242,146 @@ public class ExtractEntityService {
         }
         
         try {
-            // 查找"## 要点"的位置（支持多种格式）
+            // 定义要点和摘要的标记
             String[] keyPointsMarkers = {"## 要点", "##要点", "## 要点:", "##要点:"};
-            int startIndex = -1;
-            String foundMarker = null;
+            String[] summaryMarkers = {"## 摘要", "##摘要", "## 摘要:", "##摘要:"};
             
-            for (String marker : keyPointsMarkers) {
-                int index = message.indexOf(marker);
-                if (index != -1 && (startIndex == -1 || index < startIndex)) {
-                    startIndex = index;
-                    foundMarker = marker;
-                }
+            // 查找标记位置
+            MarkerInfo keyPointsInfo = findFirstMarker(message, keyPointsMarkers);
+            MarkerInfo summaryInfo = findFirstMarker(message, summaryMarkers);
+            
+            // 如果两者都没找到，返回整个message内容
+            if (keyPointsInfo.index == -1 && summaryInfo.index == -1) {
+                log.info("未找到'## 要点'或'## 摘要'标记，返回完整消息内容，长度: {}", message.length());
+                log.debug("完整消息内容: {}", message.length() > 200 ? message.substring(0, 200) + "..." : message);
+                return message.trim();
             }
             
-            if (startIndex == -1) {
-                log.warn("未找到'## 要点'标记");
-                return "";
-            }
-            
-            log.debug("找到要点标记: '{}' 在位置: {}", foundMarker, startIndex);
-            
-            // 跳过标记本身，找到内容开始位置
-            int contentStart = startIndex + foundMarker.length();
-            
-            // 分割内容，查找下一个markdown标题（以##开头的行）或文档结尾
-            String[] lines = message.substring(contentStart).split("\n");
-            
-            StringBuilder keyPointsContent = new StringBuilder();
-            for (String line : lines) {
-                String trimmedLine = line.trim();
-                // 如果遇到新的markdown标题（以##开头），则停止
-                if (trimmedLine.startsWith("##") && !trimmedLine.equals(foundMarker.trim())) {
-                    break;
-                }
-                keyPointsContent.append(line).append("\n");
-            }
-            
-            String result = keyPointsContent.toString().trim();
-            log.info("成功提取'## 要点'部分，内容长度: {}", result.length());
-            log.debug("提取的要点内容: {}", result.length() > 200 ? result.substring(0, 200) + "..." : result);
-            
-            return result;
+            // 合并内容
+            return buildCombinedContent(message, keyPointsInfo, summaryInfo);
             
         } catch (Exception e) {
-            log.error("提取'## 要点'部分失败", e);
+            log.error("提取内容部分失败", e);
             return "";
         }
+    }
+    
+    /**
+     * 标记信息内部类
+     */
+    private static class MarkerInfo {
+        final int index;
+        final String marker;
+        
+        MarkerInfo(int index, String marker) {
+            this.index = index;
+            this.marker = marker;
+        }
+    }
+    
+    /**
+     * 查找第一个出现的标记
+     * 
+     * @param message 消息内容
+     * @param markers 标记数组
+     * @return 标记信息
+     */
+    private MarkerInfo findFirstMarker(String message, String[] markers) {
+        int firstIndex = -1;
+        String foundMarker = null;
+        
+        for (String marker : markers) {
+            int index = message.indexOf(marker);
+            if (index != -1 && (firstIndex == -1 || index < firstIndex)) {
+                firstIndex = index;
+                foundMarker = marker;
+            }
+        }
+        
+        return new MarkerInfo(firstIndex, foundMarker);
+    }
+    
+    /**
+     * 构建合并的内容
+     * 
+     * @param message 原始消息
+     * @param keyPointsInfo 要点标记信息
+     * @param summaryInfo 摘要标记信息
+     * @return 合并后的内容
+     */
+    private String buildCombinedContent(String message, MarkerInfo keyPointsInfo, MarkerInfo summaryInfo) {
+        StringBuilder result = new StringBuilder();
+        
+        // 提取要点内容
+        if (keyPointsInfo.index != -1) {
+            String keyPointsContent = extractSectionContent(message, keyPointsInfo.index, keyPointsInfo.marker);
+            if (!keyPointsContent.trim().isEmpty()) {
+                result.append(keyPointsContent);
+                log.debug("找到要点标记: '{}' 在位置: {}, 内容长度: {}", 
+                    keyPointsInfo.marker, keyPointsInfo.index, keyPointsContent.length());
+            }
+        }
+        
+        // 提取摘要内容
+        if (summaryInfo.index != -1) {
+            String summaryContent = extractSectionContent(message, summaryInfo.index, summaryInfo.marker);
+            if (!summaryContent.trim().isEmpty()) {
+                // 如果已经有要点内容，添加分隔符
+                if (!result.isEmpty()) {
+                    result.append("\n\n");
+                }
+                result.append(summaryContent);
+                log.debug("找到摘要标记: '{}' 在位置: {}, 内容长度: {}", 
+                    summaryInfo.marker, summaryInfo.index, summaryContent.length());
+            }
+        }
+        
+        String finalResult = result.toString().trim();
+        logExtractionResult(keyPointsInfo, summaryInfo, finalResult);
+        
+        return finalResult;
+    }
+    
+    /**
+     * 记录提取结果日志
+     */
+    private void logExtractionResult(MarkerInfo keyPointsInfo, MarkerInfo summaryInfo, String finalResult) {
+        if (keyPointsInfo.index != -1 && summaryInfo.index != -1) {
+            log.info("成功提取'## 要点'和'## 摘要'部分，合并后内容长度: {}", finalResult.length());
+        } else if (keyPointsInfo.index != -1) {
+            log.info("成功提取'## 要点'部分，内容长度: {}", finalResult.length());
+        } else {
+            log.info("成功提取'## 摘要'部分，内容长度: {}", finalResult.length());
+        }
+        
+        log.debug("提取的内容: {}", finalResult.length() > 200 ? finalResult.substring(0, 200) + "..." : finalResult);
+    }
+    
+    /**
+     * 从指定位置提取markdown section的内容
+     * 
+     * @param message 完整消息
+     * @param startIndex 标记开始位置
+     * @param marker 找到的标记
+     * @return 提取的内容
+     */
+    private String extractSectionContent(String message, int startIndex, String marker) {
+        // 跳过标记本身，找到内容开始位置
+        int contentStart = startIndex + marker.length();
+        
+        // 分割内容，查找下一个markdown标题（以##开头的行）或文档结尾
+        String[] lines = message.substring(contentStart).split("\n");
+        
+        StringBuilder content = new StringBuilder();
+        for (String line : lines) {
+            String trimmedLine = line.trim();
+            // 如果遇到新的markdown标题（以##开头），则停止
+            if (trimmedLine.startsWith("##") && !trimmedLine.equals(marker.trim())) {
+                break;
+            }
+            content.append(line).append("\n");
+        }
+        
+        return content.toString().trim();
     }
 }
