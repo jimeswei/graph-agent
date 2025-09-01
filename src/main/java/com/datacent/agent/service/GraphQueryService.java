@@ -141,14 +141,17 @@ public class GraphQueryService {
         }
         namesArray.append("]");
         
-        // 构建完整的gremlin查询语句（只查询id, label, name）
+        // 构建完整的gremlin查询语句（使用union分别查询celebrity、event、work实体类型）
         String gremlinQuery = String.format(
-            "g.V().has('celebrity', 'name', within(%s))" +
-            ".project('id', 'label', 'name')" +
+            "g.V().union(" +
+            "has('celebrity', 'name', within(%s))," +
+            "hasLabel('event').filter(values('event_name').is(within(%s)))," +
+            "hasLabel('work').filter(values('title').is(within(%s)))" +
+            ").project('id', 'label', 'name')" +
             ".by(id())" +
             ".by(label())" +
             ".by('name')",
-            namesArray.toString()
+            namesArray, namesArray, namesArray
         );
         
         return gremlinQuery;
@@ -328,15 +331,18 @@ public class GraphQueryService {
         }
         namesArray.append("]");
         
-        // 构建完整的gremlin查询语句
+        // 构建完整的gremlin查询语句（使用union分别查询celebrity、event、work实体类型）
         String gremlinQuery = String.format(
-            "g.V().has('celebrity', 'name', within(%s))" +
-            ".project('id', 'label', 'name', 'profession')" +
+            "g.V().union(" +
+            "has('celebrity', 'name', within(%s))," +
+            "hasLabel('event').filter(values('event_name').is(within(%s)))," +
+            "hasLabel('work').filter(values('title').is(within(%s)))" +
+            ").project('id', 'label', 'name', 'profession')" +
             ".by(id())" +
             ".by(label())" +
             ".by('name')" +
             ".by('profession')",
-            namesArray.toString()
+            namesArray, namesArray, namesArray
         );
         
         return gremlinQuery;

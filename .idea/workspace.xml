@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="current_plan查询接口">
+    <list default="true" id="c34ce55d-da1f-4c99-92fc-e7ba5c9d19b3" name="Changes" comment="修复提取接口">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/AgentProcessController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/controller/AgentProcessController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/ExtractEntityService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/ExtractEntityService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultQueryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/McpToolResultQueryService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/GraphQueryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/datacent/agent/service/GraphQueryService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -149,6 +146,8 @@
       <workItem from="1756173533477" duration="20017000" />
       <workItem from="1756264927364" duration="42637000" />
       <workItem from="1756441187231" duration="1866000" />
+      <workItem from="1756449742313" duration="12500000" />
+      <workItem from="1756526281000" duration="14226000" />
     </task>
     <task id="LOCAL-00001" summary="优化参数">
       <option name="closed" value="true" />
@@ -390,7 +389,15 @@
       <option name="project" value="LOCAL" />
       <updated>1756431563742</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="修复提取接口">
+      <option name="closed" value="true" />
+      <created>1756541042134</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1756541042134</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -425,7 +432,8 @@
     <MESSAGE value="修改注释" />
     <MESSAGE value="current_plan保存接口" />
     <MESSAGE value="current_plan查询接口" />
-    <option name="LAST_COMMIT_MESSAGE" value="current_plan查询接口" />
+    <MESSAGE value="修复提取接口" />
+    <option name="LAST_COMMIT_MESSAGE" value="修复提取接口" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
