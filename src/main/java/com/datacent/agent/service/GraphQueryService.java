@@ -147,10 +147,12 @@ public class GraphQueryService {
             "has('celebrity', 'name', within(%s))," +
             "hasLabel('event').filter(values('event_name').is(within(%s)))," +
             "hasLabel('work').filter(values('title').is(within(%s)))" +
-            ").project('id', 'label', 'name')" +
+            ").project('id', 'label', 'name','event_name', 'title')" +
             ".by(id())" +
             ".by(label())" +
-            ".by('name')",
+            ".by('name')" +
+            ".by('event_name')"+
+            ".by('title')",
             namesArray, namesArray, namesArray
         );
         
@@ -337,10 +339,12 @@ public class GraphQueryService {
             "has('celebrity', 'name', within(%s))," +
             "hasLabel('event').filter(values('event_name').is(within(%s)))," +
             "hasLabel('work').filter(values('title').is(within(%s)))" +
-            ").project('id', 'label', 'name', 'profession')" +
+            ").project('id', 'label', 'name','event_name', 'title', 'profession')" +
             ".by(id())" +
             ".by(label())" +
             ".by('name')" +
+            ".by('event_name')" +
+            ".by('title')" +
             ".by('profession')",
             namesArray, namesArray, namesArray
         );
