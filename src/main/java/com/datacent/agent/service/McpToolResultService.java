@@ -99,7 +99,7 @@ public class McpToolResultService {
 
         try {
             // 构建完整请求（使用提供的threadId，绝不生成新的）
-            JSONObject fullRequest = chatRequestBuilderService.buildFullRequest(message, threadId);
+            JSONObject fullRequest = chatRequestBuilderService.buildFullRequest(request);
             
             // 验证请求中的thread_id与传入的threadId一致
             String requestThreadId = fullRequest.getString("thread_id");

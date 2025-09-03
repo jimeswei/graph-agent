@@ -15,13 +15,6 @@ import java.util.UUID;
 @Service
 public class ChatRequestBuilderService {
     
-    /**
-     * 构建完整的请求体
-     */
-    public JSONObject buildFullRequest(String message) {
-        return buildFullRequest(message, null);
-    }
-
 
     /**
      * 生成统一格式的threadId
@@ -33,9 +26,26 @@ public class ChatRequestBuilderService {
     /**
      * 构建完整的请求体（支持自定义thread_id）
      */
-    public JSONObject buildFullRequest(String message, String threadId) {
-        JSONObject request = new JSONObject();
-        
+    public JSONObject buildFullRequest(JSONObject request) {
+
+        /**
+         * thread_id: 会话线程标识符，用于状态持久化和恢复 （必传）
+         * massage: 用户问题                           （必传）
+         * resources: 预设资源列表，可包含文档、网站等初始研究材料 （可选）
+         * auto_accepted_plan: 自动接受计划标志，跳过人工审核环节直接执行 （可选）
+         * enable_deep_thinking: 启用深度思考模式，可能激活推理模型进行复杂分析 （可选）
+         * enable_background_investigation: 启用背景调研功能，扩展相关主题的探索范围 （可选）
+         * max_plan_iterations: Planner代理最大迭代次数限制 （可选）
+         * max_step_num: 工作流最大执行步骤数 （可选）
+         * max_search_results: 搜索结果数量上限 （可选）
+         * report_style: 报告输出风格，这里设为"academic"学术风格 （可选）
+         */
+
+        String message = request.getString("message");
+        String threadId = request.getString("thread_id");
+//        String maxPlanIterations = request.getString("max_plan_iterations");
+//        String maxStepNum = request.getString("max_step_num");
+//        String maxSearchResults = request.getString("max_search_results");
         // 构建messages数组
         JSONArray messages = new JSONArray();
         JSONObject messageObj = new JSONObject();
@@ -60,7 +70,7 @@ public class ChatRequestBuilderService {
         request.put("auto_accepted_plan", true);
         request.put("enable_deep_thinking", true);
         request.put("enable_background_investigation", true);
-        request.put("max_plan_iterations", 1);
+        request.put("max_plan_iterations", 3);
         request.put("max_step_num", 5);
         request.put("max_search_results", 5);
         request.put("report_style", "academic");
