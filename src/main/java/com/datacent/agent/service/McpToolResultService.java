@@ -79,10 +79,13 @@ public class McpToolResultService {
     /**
      * 获取流式数据并返回 - 纯流式版本（支持自定义thread_id）
      * 从消息构建请求并获取流式响应数据
-     * @param message 消息内容
-     * @param threadId 线程ID（必须提供，不能为空）
+     * @param request 消息内容
      */
-    public Flux<String> extractMcpToolResultsStream(String message, String threadId) {
+    public Flux<String> extractMcpToolResultsStream(JSONObject request) {
+
+
+        String message = request.getString("message");
+        String threadId = request.getString("thread_id");
 
         if (message == null || message.trim().isEmpty()) {
             return Flux.just("data: " + chatRequestBuilderService.createErrorResponse("消息内容不能为空").toJSONString() + "\n\n");

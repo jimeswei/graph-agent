@@ -65,7 +65,7 @@ jwt:
 llm:
   api:
     base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-    model: deepseek-r1
+    model: deepseek-v3
     api-key: sk-813c55f9fffd4bfd9607741ddbe40ced
 
 # 图数据库API配置

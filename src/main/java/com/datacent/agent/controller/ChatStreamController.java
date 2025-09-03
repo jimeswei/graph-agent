@@ -40,11 +40,8 @@ public class ChatStreamController {
      */
     @PostMapping(value = "/stream/proxy", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> extractMcpToolResultsStream(@RequestBody JSONObject request) {
-        String message = request.getString("message");
-        String threadId = request.getString("thread_id");
-        log.info("开始流式提取MCP工具调用结果，消息: {}, 线程ID: {}", message, threadId);
 
-        return agentProcessService.process(message, threadId);
+        return agentProcessService.process(request);
     }
 
 

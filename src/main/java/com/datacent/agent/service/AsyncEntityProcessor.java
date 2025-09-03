@@ -36,11 +36,13 @@ public class AsyncEntityProcessor {
     /**
      * 异步提取实体并保存到缓存
      * 
-     * @param message 待处理的消息
-     * @param threadId 线程ID
+     * @param request 待处理的消息
      */
     //@Async("entityExtractorExecutor")
-    public void extractAndCacheEntitiesAsync(String message, String threadId) {
+    public void extractAndCacheEntitiesAsync(JSONObject request) {
+        String message = request.getString("message");
+        String threadId = request.getString("thread_id");
+
         try {
             log.info("开始异步实体提取，threadId: {}", threadId);
 
